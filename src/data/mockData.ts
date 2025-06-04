@@ -19,79 +19,79 @@ export const productos: Producto[] = [
     precio: 59990,
     categoria: '1',
     stock: 15,
-    imagen: 'https://images.pexels.com/photos/2113566/pexels-photo-2113566.jpeg',
+    imagen: 'src/assets/images/Taladro.webp',
     destacado: true
   },
-  {
-    id: '2',
-    nombre: 'Set de Destornilladores (10 pcs)',
-    descripcion: 'Juego de destornilladores precisión diferentes tamaños',
-    precio: 12990,
-    categoria: '1',
-    stock: 23,
-    imagen: 'https://images.pexels.com/photos/3822843/pexels-photo-3822843.jpeg',
-    destacado: true
-  },
-  {
-    id: '3',
-    nombre: 'Pintura Látex Blanco 1GL',
-    descripcion: 'Pintura lavable de alta cobertura para interiores',
-    precio: 18990,
-    categoria: '2',
-    stock: 42,
-    imagen: 'https://images.pexels.com/photos/5582597/pexels-photo-5582597.jpeg',
-    destacado: false
-  },
-  {
-    id: '4',
-    nombre: 'Sierra Circular 7 1/4"',
-    descripcion: 'Sierra eléctrica para cortes precisos en madera',
-    precio: 49990,
-    categoria: '1',
-    stock: 8,
-    imagen: 'https://images.pexels.com/photos/1109541/pexels-photo-1109541.jpeg',
-    destacado: true
-  },
-  {
-    id: '5',
-    nombre: 'Cable Eléctrico 12AWG (10m)',
-    descripcion: 'Cable flexible para instalaciones domésticas',
-    precio: 8990,
-    categoria: '3',
-    stock: 56,
-    imagen: 'https://images.pexels.com/photos/2249063/pexels-photo-2249063.jpeg',
-    destacado: false
-  },
-  {
-    id: '6',
-    nombre: 'Llave Ajustable 10"',
-    descripcion: 'Llave de alta resistencia para múltiples usos',
-    precio: 7990,
-    categoria: '1',
-    stock: 19,
-    imagen: 'https://images.pexels.com/photos/210881/pexels-photo-210881.jpeg',
-    destacado: false
-  },
-  {
-    id: '7',
-    nombre: 'Manguera de Jardín 15m',
-    descripcion: 'Manguera reforzada con conectores incluidos',
-    precio: 15990,
-    categoria: '6',
-    stock: 12,
-    imagen: 'https://images.pexels.com/photos/2292953/pexels-photo-2292953.jpeg',
-    destacado: true
-  },
-  {
-    id: '8',
-    nombre: 'Cemento 25kg',
-    descripcion: 'Cemento de alta resistencia para obras',
-    precio: 6990,
-    categoria: '5',
-    stock: 34,
-    imagen: 'https://images.pexels.com/photos/544966/pexels-photo-544966.jpeg',
-    destacado: false
-  },
+  // {
+  //   id: '2',
+  //   nombre: 'Set de Destornilladores (10 pcs)',
+  //   descripcion: 'Juego de destornilladores precisión diferentes tamaños',
+  //   precio: 12990,
+  //   categoria: '1',
+  //   stock: 23,
+  //   imagen: 'https://images.pexels.com/photos/3822843/pexels-photo-3822843.jpeg',
+  //   destacado: true
+  // },
+  // {
+  //   id: '3',
+  //   nombre: 'Pintura Látex Blanco 1GL',
+  //   descripcion: 'Pintura lavable de alta cobertura para interiores',
+  //   precio: 18990,
+  //   categoria: '2',
+  //   stock: 42,
+  //   imagen: 'https://images.pexels.com/photos/5582597/pexels-photo-5582597.jpeg',
+  //   destacado: false
+  // },
+  // {
+  //   id: '4',
+  //   nombre: 'Sierra Circular 7 1/4"',
+  //   descripcion: 'Sierra eléctrica para cortes precisos en madera',
+  //   precio: 49990,
+  //   categoria: '1',
+  //   stock: 8,
+  //   imagen: 'https://images.pexels.com/photos/1109541/pexels-photo-1109541.jpeg',
+  //   destacado: true
+  // },
+  // {
+  //   id: '5',
+  //   nombre: 'Cable Eléctrico 12AWG (10m)',
+  //   descripcion: 'Cable flexible para instalaciones domésticas',
+  //   precio: 8990,
+  //   categoria: '3',
+  //   stock: 56,
+  //   imagen: 'https://images.pexels.com/photos/2249063/pexels-photo-2249063.jpeg',
+  //   destacado: false
+  // },
+  // {
+  //   id: '6',
+  //   nombre: 'Llave Ajustable 10"',
+  //   descripcion: 'Llave de alta resistencia para múltiples usos',
+  //   precio: 7990,
+  //   categoria: '1',
+  //   stock: 19,
+  //   imagen: 'https://images.pexels.com/photos/210881/pexels-photo-210881.jpeg',
+  //   destacado: false
+  // },
+  // {
+  //   id: '7',
+  //   nombre: 'Manguera de Jardín 15m',
+  //   descripcion: 'Manguera reforzada con conectores incluidos',
+  //   precio: 15990,
+  //   categoria: '6',
+  //   stock: 12,
+  //   imagen: 'https://images.pexels.com/photos/2292953/pexels-photo-2292953.jpeg',
+  //   destacado: true
+  // },
+  // {
+  //   id: '8',
+  //   nombre: 'Cemento 25kg',
+  //   descripcion: 'Cemento de alta resistencia para obras',
+  //   precio: 6990,
+  //   categoria: '5',
+  //   stock: 34,
+  //   imagen: 'https://images.pexels.com/photos/544966/pexels-photo-544966.jpeg',
+  //   destacado: false
+  // },
 ];
 
 // Clientes recientes
