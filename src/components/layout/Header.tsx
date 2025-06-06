@@ -11,14 +11,14 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen }) => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [notificacionesOpen, setNotificacionesOpen] = useState(false);
-  
+
   const notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
 
   return (
     <header className="bg-white border-b border-gray-200 fixed w-full z-30">
       <div className="px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
         <div className="flex items-center">
-          <button 
+          <button
             onClick={toggleSidebar}
             className="text-gray-500 hover:text-orange-500 focus:outline-none focus:text-orange-500 mr-3"
           >
@@ -36,10 +36,10 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen }) => {
             <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
               <Search size={18} className="text-gray-400" />
             </div>
-            <input 
-              type="search" 
+            <input
+              type="search"
               className="bg-gray-100 w-full pl-10 pr-4 py-2 rounded-lg border-0 focus:ring-2 focus:ring-orange-500 focus:bg-white"
-              placeholder="Buscar productos, clientes, órdenes..." 
+              placeholder="Buscar productos, clientes, órdenes..."
             />
           </div>
         </div>
@@ -51,7 +51,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen }) => {
           >
             {searchOpen ? <X size={20} /> : <Search size={20} />}
           </button>
-          
+
           <div className="relative">
             <button
               onClick={() => setNotificacionesOpen(!notificacionesOpen)}
@@ -64,15 +64,15 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen }) => {
                 </span>
               )}
             </button>
-            
+
             {notificacionesOpen && (
-              <NotificacionesDropdown 
-                notificaciones={notificaciones} 
+              <NotificacionesDropdown
+                notificaciones={notificaciones}
                 onClose={() => setNotificacionesOpen(false)}
               />
             )}
           </div>
-          
+
           <button className="flex items-center text-gray-500 hover:text-orange-500 focus:outline-none">
             <div className="hidden md:block mr-2 text-right">
               <div className="text-sm font-medium">Admin</div>

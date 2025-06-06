@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import {
-    Plus, Search, Filter, Download, Edit2, Trash2,
-    AlertCircle, CheckCircle2, ArrowUpDown
+    Plus, Search, Filter, ArrowUpDown, Edit2, Trash2,
+    CheckCircle, AlertTriangle, AlertCircle, Circle,
+    CircleDot, CircleDashed
 } from 'lucide-react';
 import { productos, categorias } from '../data/mockData';
 import { formatPrecio } from '../utils/formatters';
@@ -12,18 +13,43 @@ const Productos: React.FC = () => {
     const [modalOpen, setModalOpen] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [productoSeleccionado, setProductoSeleccionado] = useState<any>(null);
+    const [vistaPrevia, setVistaPrevia] = useState<string | null>(null);
     const [filtroCategoria, setFiltroCategoria] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('');
     const [busqueda, setBusqueda] = useState('');
     const [pagina, setPagina] = useState(1);
     const [ordenamiento, setOrdenamiento] = useState({ campo: '', direccion: 'asc' });
 
+    const getEstadoIcono = (estado: string) => {
+        switch (estado) {
+            case 'activo':
+                return <CircleDot size={16} className="text-green-500" />;
+            case 'inactivo':
+                return <Circle size={16} className="text-gray-400" />;
+            case 'revision':
+                return <CircleDashed size={16} className="text-orange-500" />;
+            default:
+                return null;
+        }
+    };
+
+    const getStockIndicador = (stock: number) => {
+        if (stock > 20) {
+            return <CheckCircle size={16} className="text-green-500" />;
+        } else if (stock >= 5) {
+            return <AlertTriangle size={16} className="text-yellow-500" />;
+        } else {
+            return <AlertCircle size={16} className="text-red-500" />;
+        }
+    };
+
     const productosFiltrados = useMemo(() => {
         return productos
             .filter(producto => {
                 const matchCategoria = !filtroCategoria || producto.categoria === filtroCategoria;
                 const matchEstado = !filtroEstado || producto.destacado === (filtroEstado === 'activo');
-                const matchBusqueda = producto.nombre.toLowerCase().includes(busqueda.toLowerCase());
+                const matchBusqueda = producto.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+                    producto.descripcion.toLowerCase().includes(busqueda.toLowerCase());
                 return matchCategoria && matchEstado && matchBusqueda;
             })
             .sort((a, b) => {
@@ -50,20 +76,15 @@ const Productos: React.FC = () => {
         }));
     };
 
-    const handleExportar = (formato: 'excel' | 'pdf') => {
-        // Implementar exportación
-        console.log(`Exportando a ${formato}...`);
-    };
-
     const handleEliminar = (producto: any) => {
         setProductoSeleccionado(producto);
         setConfirmOpen(true);
     };
 
     const confirmarEliminacion = () => {
-        // Implementar eliminación
         console.log('Eliminando producto:', productoSeleccionado);
         setConfirmOpen(false);
+        setProductoSeleccionado(null);
     };
 
     return (
@@ -75,7 +96,7 @@ const Productos: React.FC = () => {
                     className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center"
                 >
                     <Plus size={20} className="mr-2" />
-                    Agregar Producto
+                    Nuevo Producto
                 </button>
             </div>
 
@@ -111,24 +132,8 @@ const Productos: React.FC = () => {
                     <option value="">Todos los estados</option>
                     <option value="activo">Activo</option>
                     <option value="inactivo">Inactivo</option>
+                    <option value="revision">En revisión</option>
                 </select>
-
-                <div className="flex space-x-2">
-                    <button
-                        onClick={() => handleExportar('excel')}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center"
-                    >
-                        <Download size={20} className="mr-2" />
-                        Excel
-                    </button>
-                    <button
-                        onClick={() => handleExportar('pdf')}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center"
-                    >
-                        <Download size={20} className="mr-2" />
-                        PDF
-                    </button>
-                </div>
             </div>
 
             {/* Tabla de productos */}
@@ -170,15 +175,16 @@ const Productos: React.FC = () => {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                            {productosEnPagina.map((producto) => (
+                            {productosEnPagina.map(producto => (
                                 <tr key={producto.id} className="hover:bg-gray-50">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
                                             <div className="flex-shrink-0 h-10 w-10">
                                                 <img
-                                                    className="h-10 w-10 rounded-lg object-cover"
+                                                    className="h-10 w-10 rounded-lg object-cover cursor-pointer"
                                                     src={producto.imagen}
                                                     alt={producto.nombre}
+                                                    onClick={() => setVistaPrevia(producto.imagen)}
                                                 />
                                             </div>
                                             <div className="ml-4">
@@ -188,7 +194,7 @@ const Productos: React.FC = () => {
                                         </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className="text-sm text-gray-900">
+                                        <span className="px-2 py-1 text-sm rounded-full bg-blue-100 text-blue-800">
                                             {categorias.find(c => c.id === producto.categoria)?.nombre}
                                         </span>
                                     </td>
@@ -198,17 +204,16 @@ const Productos: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`text-sm ${producto.stock < 10 ? 'text-red-600' : 'text-gray-900'}`}>
-                                            {producto.stock} unidades
-                                        </span>
+                                        <div className="flex items-center">
+                                            {getStockIndicador(producto.stock)}
+                                            <span className="ml-2 text-sm text-gray-900">{producto.stock} unidades</span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
-                                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${producto.destacado
-                                            ? 'bg-green-100 text-green-800'
-                                            : 'bg-gray-100 text-gray-800'
-                                            }`}>
-                                            {producto.destacado ? 'Activo' : 'Inactivo'}
-                                        </span>
+                                        <div className="flex items-center">
+                                            {getEstadoIcono(producto.estado)}
+                                            <span className="ml-2 text-sm capitalize">{producto.estado}</span>
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                         <div className="flex space-x-2">
@@ -238,80 +243,44 @@ const Productos: React.FC = () => {
                 {/* Paginación */}
                 <div className="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
                     <div className="flex items-center justify-between">
-                        <div className="flex-1 flex justify-between sm:hidden">
+                        <div className="text-sm text-gray-700">
+                            Mostrando {((pagina - 1) * 10) + 1} a {Math.min(pagina * 10, productosFiltrados.length)} de {productosFiltrados.length} productos
+                        </div>
+                        <div className="flex space-x-2">
                             <button
                                 onClick={() => setPagina(prev => Math.max(prev - 1, 1))}
                                 disabled={pagina === 1}
-                                className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50"
                             >
                                 Anterior
                             </button>
                             <button
                                 onClick={() => setPagina(prev => Math.min(prev + 1, totalPaginas))}
                                 disabled={pagina === totalPaginas}
-                                className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                className="px-4 py-2 border border-gray-300 rounded-md disabled:opacity-50"
                             >
                                 Siguiente
                             </button>
                         </div>
-                        <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                            <div>
-                                <p className="text-sm text-gray-700">
-                                    Mostrando <span className="font-medium">{((pagina - 1) * 10) + 1}</span> a{' '}
-                                    <span className="font-medium">
-                                        {Math.min(pagina * 10, productosFiltrados.length)}
-                                    </span>{' '}
-                                    de <span className="font-medium">{productosFiltrados.length}</span> resultados
-                                </p>
-                            </div>
-                            <div>
-                                <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-                                    <button
-                                        onClick={() => setPagina(1)}
-                                        disabled={pagina === 1}
-                                        className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                                    >
-                                        Primera
-                                    </button>
-                                    <button
-                                        onClick={() => setPagina(prev => Math.max(prev - 1, 1))}
-                                        disabled={pagina === 1}
-                                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                                    >
-                                        Anterior
-                                    </button>
-                                    {[...Array(totalPaginas)].map((_, i) => (
-                                        <button
-                                            key={i + 1}
-                                            onClick={() => setPagina(i + 1)}
-                                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${pagina === i + 1
-                                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
-                                                }`}
-                                        >
-                                            {i + 1}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() => setPagina(prev => Math.min(prev + 1, totalPaginas))}
-                                        disabled={pagina === totalPaginas}
-                                        className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                                    >
-                                        Siguiente
-                                    </button>
-                                    <button
-                                        onClick={() => setPagina(totalPaginas)}
-                                        disabled={pagina === totalPaginas}
-                                        className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                                    >
-                                        Última
-                                    </button>
-                                </nav>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
+
+            {/* Modal de vista previa de imagen */}
+            {vistaPrevia && (
+                <div
+                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                    onClick={() => setVistaPrevia(null)}
+                >
+                    <div className="max-w-4xl max-h-[90vh] overflow-hidden rounded-lg">
+                        <img
+                            src={vistaPrevia}
+                            alt="Vista previa"
+                            className="w-full h-full object-contain"
+                        />
+                    </div>
+                </div>
+            )}
 
             {/* Modal de producto */}
             {modalOpen && (

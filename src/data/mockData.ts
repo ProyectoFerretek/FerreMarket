@@ -20,7 +20,8 @@ export const productos: Producto[] = [
     categoria: '1',
     stock: 15,
     imagen: 'src/assets/images/Taladro.webp',
-    destacado: true
+    destacado: true,
+    estado: 'activo'
   },
   // {
   //   id: '2',

@@ -4,7 +4,7 @@ import { formatPrecio, formatFecha, getNombreCliente, getEstadoVenta } from '../
 
 const VentasRecientes: React.FC = () => {
   // Ordenar ventas por fecha (más recientes primero)
-  const ventasOrdenadas = [...ventas].sort((a, b) => 
+  const ventasOrdenadas = [...ventas].sort((a, b) =>
     new Date(b.fecha).getTime() - new Date(a.fecha).getTime()
   );
 
@@ -13,7 +13,7 @@ const VentasRecientes: React.FC = () => {
       <div className="px-6 py-4 border-b border-gray-100">
         <h3 className="text-lg font-semibold text-gray-800">Ventas Recientes</h3>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
@@ -41,7 +41,7 @@ const VentasRecientes: React.FC = () => {
           <tbody className="bg-white divide-y divide-gray-200">
             {ventasOrdenadas.map(venta => {
               const estadoInfo = getEstadoVenta(venta.estado);
-              
+
               return (
                 <tr key={venta.id} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -70,7 +70,7 @@ const VentasRecientes: React.FC = () => {
           </tbody>
         </table>
       </div>
-      
+
       <div className="px-6 py-3 border-t border-gray-100 bg-gray-50">
         <button className="text-sm text-orange-600 hover:text-orange-700">
           Ver todas las ventas →

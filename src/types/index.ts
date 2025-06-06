@@ -7,6 +7,7 @@ export interface Producto {
   stock: number;
   imagen: string;
   destacado: boolean;
+  estado: string;
 }
 
 export interface Cliente {
