@@ -19,7 +19,8 @@ const Clientes: React.FC = () => {
                 const searchTerm = busqueda.toLowerCase();
                 return (
                     cliente.nombre.toLowerCase().includes(searchTerm) ||
-                    cliente.email.toLowerCase().includes(searchTerm)
+                    cliente.email.toLowerCase().includes(searchTerm) ||
+                    cliente.telefono.includes(searchTerm)
                 );
             })
             .sort((a, b) => {
@@ -52,13 +53,13 @@ const Clientes: React.FC = () => {
     };
 
     const confirmarEliminacion = () => {
-        // Implementar eliminación
+        // Aquí iría la lógica para eliminar el cliente
         console.log('Eliminando cliente:', clienteSeleccionado);
         setConfirmOpen(false);
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-16">
             <div className="flex justify-between items-center">
                 <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
                 <button
@@ -66,7 +67,7 @@ const Clientes: React.FC = () => {
                     className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center"
                 >
                     <Plus size={20} className="mr-2" />
-                    Agregar Cliente
+                    Nuevo Cliente
                 </button>
             </div>
 
@@ -75,7 +76,7 @@ const Clientes: React.FC = () => {
                 <Search size={20} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                     type="text"
-                    placeholder="Buscar por nombre o email..."
+                    placeholder="Buscar por nombre, email o teléfono..."
                     value={busqueda}
                     onChange={(e) => setBusqueda(e.target.value)}
                     className="pl-10 pr-4 py-2 w-full rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -102,8 +103,12 @@ const Clientes: React.FC = () => {
                                         <ArrowUpDown size={14} className="ml-1" />
                                     </div>
                                 </th>
-                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                    Email
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
+                                    onClick={() => handleOrdenar('email')}>
+                                    <div className="flex items-center">
+                                        Email
+                                        <ArrowUpDown size={14} className="ml-1" />
+                                    </div>
                                 </th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                     Teléfono
@@ -131,6 +136,9 @@ const Clientes: React.FC = () => {
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm font-medium text-gray-900">{cliente.nombre}</div>
+                                        {cliente.tipoCliente === 'empresa' && (
+                                            <div className="text-xs text-gray-500">RUC: {cliente.identificacion}</div>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="text-sm text-gray-900">{cliente.email}</div>
@@ -262,7 +270,7 @@ const Clientes: React.FC = () => {
             {confirmOpen && (
                 <ConfirmDialog
                     titulo="Eliminar Cliente"
-                    mensaje={`¿Estás seguro de que deseas eliminar al cliente "${clienteSeleccionado?.nombre}"?`}
+                    mensaje={`¿Estás seguro de que deseas eliminar al cliente "${clienteSeleccionado?.nombre}"? Esta acción no se puede deshacer.`}
                     onConfirm={confirmarEliminacion}
                     onCancel={() => setConfirmOpen(false)}
                 />
