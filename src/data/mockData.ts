@@ -18,7 +18,7 @@ export const productos: Producto[] = [
     descripcion: 'Taladro recargable con batería de larga duración y maletín',
     precio: 59990,
     categoria: '1',
-    stock: 15,
+    stock: 123,
     imagen: 'src/assets/images/Taladro.webp',
     destacado: true,
     estado: 'activo'

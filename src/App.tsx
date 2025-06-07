@@ -9,6 +9,8 @@ import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
 import Productos from './pages/Productos';
 import Clientes from './pages/Clientes';
+import Ventas from './pages/Ventas';
+import Reportes from './pages/Reportes';
 
 function App() {
   return (
@@ -18,6 +20,8 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="productos" element={<Productos />} />
           <Route path="clientes" element={<Clientes />} />
+          <Route path="ventas" element={<Ventas />} />
+          <Route path="reportes" element={<Reportes />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
