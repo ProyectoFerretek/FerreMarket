@@ -1,4 +1,4 @@
-import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion } from '../types';
+import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario } from '../types';
 
 // Categorías de productos
 export const categorias: Categoria[] = [
@@ -18,81 +18,80 @@ export const productos: Producto[] = [
     descripcion: 'Taladro recargable con batería de larga duración y maletín',
     precio: 59990,
     categoria: '1',
-    stock: 123,
+    stock: 0,
     imagen: 'src/assets/images/Taladro.webp',
-    destacado: true,
-    estado: 'activo'
+    destacado: true
   },
-  // {
-  //   id: '2',
-  //   nombre: 'Set de Destornilladores (10 pcs)',
-  //   descripcion: 'Juego de destornilladores precisión diferentes tamaños',
-  //   precio: 12990,
-  //   categoria: '1',
-  //   stock: 23,
-  //   imagen: 'https://images.pexels.com/photos/3822843/pexels-photo-3822843.jpeg',
-  //   destacado: true
-  // },
-  // {
-  //   id: '3',
-  //   nombre: 'Pintura Látex Blanco 1GL',
-  //   descripcion: 'Pintura lavable de alta cobertura para interiores',
-  //   precio: 18990,
-  //   categoria: '2',
-  //   stock: 42,
-  //   imagen: 'https://images.pexels.com/photos/5582597/pexels-photo-5582597.jpeg',
-  //   destacado: false
-  // },
-  // {
-  //   id: '4',
-  //   nombre: 'Sierra Circular 7 1/4"',
-  //   descripcion: 'Sierra eléctrica para cortes precisos en madera',
-  //   precio: 49990,
-  //   categoria: '1',
-  //   stock: 8,
-  //   imagen: 'https://images.pexels.com/photos/1109541/pexels-photo-1109541.jpeg',
-  //   destacado: true
-  // },
-  // {
-  //   id: '5',
-  //   nombre: 'Cable Eléctrico 12AWG (10m)',
-  //   descripcion: 'Cable flexible para instalaciones domésticas',
-  //   precio: 8990,
-  //   categoria: '3',
-  //   stock: 56,
-  //   imagen: 'https://images.pexels.com/photos/2249063/pexels-photo-2249063.jpeg',
-  //   destacado: false
-  // },
-  // {
-  //   id: '6',
-  //   nombre: 'Llave Ajustable 10"',
-  //   descripcion: 'Llave de alta resistencia para múltiples usos',
-  //   precio: 7990,
-  //   categoria: '1',
-  //   stock: 19,
-  //   imagen: 'https://images.pexels.com/photos/210881/pexels-photo-210881.jpeg',
-  //   destacado: false
-  // },
-  // {
-  //   id: '7',
-  //   nombre: 'Manguera de Jardín 15m',
-  //   descripcion: 'Manguera reforzada con conectores incluidos',
-  //   precio: 15990,
-  //   categoria: '6',
-  //   stock: 12,
-  //   imagen: 'https://images.pexels.com/photos/2292953/pexels-photo-2292953.jpeg',
-  //   destacado: true
-  // },
-  // {
-  //   id: '8',
-  //   nombre: 'Cemento 25kg',
-  //   descripcion: 'Cemento de alta resistencia para obras',
-  //   precio: 6990,
-  //   categoria: '5',
-  //   stock: 34,
-  //   imagen: 'https://images.pexels.com/photos/544966/pexels-photo-544966.jpeg',
-  //   destacado: false
-  // },
+  {
+    id: '2',
+    nombre: 'Set de Destornilladores (10 pcs)',
+    descripcion: 'Juego de destornilladores precisión diferentes tamaños',
+    precio: 12990,
+    categoria: '1',
+    stock: 23,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: true
+  },
+  {
+    id: '3',
+    nombre: 'Pintura Látex Blanco 1GL',
+    descripcion: 'Pintura lavable de alta cobertura para interiores',
+    precio: 18990,
+    categoria: '2',
+    stock: 42,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: false
+  },
+  {
+    id: '4',
+    nombre: 'Sierra Circular 7 1/4"',
+    descripcion: 'Sierra eléctrica para cortes precisos en madera',
+    precio: 49990,
+    categoria: '1',
+    stock: 8,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: true
+  },
+  {
+    id: '5',
+    nombre: 'Cable Eléctrico 12AWG (10m)',
+    descripcion: 'Cable flexible para instalaciones domésticas',
+    precio: 8990,
+    categoria: '3',
+    stock: 2,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: false
+  },
+  {
+    id: '6',
+    nombre: 'Llave Ajustable 10"',
+    descripcion: 'Llave de alta resistencia para múltiples usos',
+    precio: 7990,
+    categoria: '1',
+    stock: 19,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: false
+  },
+  {
+    id: '7',
+    nombre: 'Manguera de Jardín 15m',
+    descripcion: 'Manguera reforzada con conectores incluidos',
+    precio: 15990,
+    categoria: '6',
+    stock: 12,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: true
+  },
+  {
+    id: '8',
+    nombre: 'Cemento 25kg',
+    descripcion: 'Cemento de alta resistencia para obras',
+    precio: 6990,
+    categoria: '5',
+    stock: 34,
+    imagen: 'src/assets/images/Taladro.webp',
+    destacado: false
+  },
 ];
 
 // Clientes recientes
@@ -228,3 +227,76 @@ export const notificaciones: Notificacion[] = [
     leida: false
   }
 ];
+
+// Usuarios del sistema
+export const usuarios: Usuario[] = [
+  {
+    id: '1',
+    nombre: 'Administrador Principal',
+    email: 'admin@ferremarket.com',
+    rol: 'admin',
+    estado: 'activo',
+    fechaCreacion: '2024-01-15T10:00:00',
+    ultimaModificacion: '2025-04-19T14:30:00',
+    ultimoAcceso: '2025-04-19T15:45:00',
+    avatar: 'src/assets/images/Taladro.webp'
+  },
+  {
+    id: '2',
+    nombre: 'Carlos Mendoza',
+    email: 'carlos.mendoza@ferremarket.com',
+    rol: 'admin',
+    estado: 'activo',
+    fechaCreacion: '2024-02-20T09:15:00',
+    ultimaModificacion: '2025-04-18T16:20:00',
+    ultimoAcceso: '2025-04-19T08:30:00',
+    avatar: 'src/assets/images/Taladro.webp'
+  },
+  {
+    id: '3',
+    nombre: 'Ana Rodríguez',
+    email: 'ana.rodriguez@ferremarket.com',
+    rol: 'usuario',
+    estado: 'activo',
+    fechaCreacion: '2024-03-10T11:30:00',
+    ultimaModificacion: '2025-04-17T10:45:00',
+    ultimoAcceso: '2025-04-19T12:15:00',
+    avatar: 'src/assets/images/Taladro.webp'
+  },
+  {
+    id: '4',
+    nombre: 'Luis García',
+    email: 'luis.garcia@ferremarket.com',
+    rol: 'usuario',
+    estado: 'activo',
+    fechaCreacion: '2024-04-05T14:20:00',
+    ultimaModificacion: '2025-04-16T09:30:00',
+    ultimoAcceso: '2025-04-18T17:20:00',
+    avatar: 'src/assets/images/Taladro.webp'
+  },
+  {
+    id: '5',
+    nombre: 'María Fernández',
+    email: 'maria.fernandez@ferremarket.com',
+    rol: 'usuario',
+    estado: 'inactivo',
+    fechaCreacion: '2024-01-30T16:45:00',
+    ultimaModificacion: '2025-04-10T11:15:00',
+    ultimoAcceso: '2025-04-10T11:15:00',
+    avatar: 'src/assets/images/Taladro.webp'
+  },
+  {
+    id: '6',
+    nombre: 'Roberto Silva',
+    email: 'roberto.silva@ferremarket.com',
+    rol: 'usuario',
+    estado: 'activo',
+    fechaCreacion: '2024-05-12T13:10:00',
+    ultimaModificacion: '2025-04-19T08:45:00',
+    ultimoAcceso: '2025-04-19T14:20:00',
+    avatar: 'src/assets/images/Taladro.webp'
+  }
+];
+
+// Usuario actual (simulación de sesión)
+export const usuarioActual: Usuario = usuarios[0]; // Admin principal
