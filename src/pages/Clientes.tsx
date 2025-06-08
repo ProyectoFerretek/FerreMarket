@@ -215,9 +215,7 @@ const Clientes: React.FC = () => {
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3 flex-1 min-w-0">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold ${
-              cliente.tipoCliente === 'empresa' ? 'bg-purple-500' : 'bg-blue-500'
-            }`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-semibold bg-orange-500`}>
               {cliente.tipoCliente === 'empresa' ? (
                 <Building2 size={20} />
               ) : (
@@ -372,7 +370,7 @@ const Clientes: React.FC = () => {
           
           <button
             onClick={() => setModalOpen(true)}
-            className="bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center text-sm font-medium transition-colors"
+            className="bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center text-sm font-medium transition-colors"
           >
             <Plus size={16} className="mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Nuevo Cliente</span>
@@ -586,9 +584,7 @@ const Clientes: React.FC = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold mr-3 ${
-                          cliente.tipoCliente === 'empresa' ? 'bg-purple-500' : 'bg-blue-500'
-                        }`}>
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold mr-3 bg-orange-500`}>
                           {cliente.tipoCliente === 'empresa' ? (
                             <Building2 size={16} />
                           ) : (
@@ -763,9 +759,7 @@ const Clientes: React.FC = () => {
             <div className="p-6 space-y-6">
               {/* Información básica */}
               <div className="flex items-center space-x-4">
-                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl ${
-                  vistaPreview.tipoCliente === 'empresa' ? 'bg-purple-500' : 'bg-blue-500'
-                }`}>
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-white font-bold text-xl bg-orange-500`}>
                   {vistaPreview.tipoCliente === 'empresa' ? (
                     <Building2 size={24} />
                   ) : (
@@ -846,7 +840,7 @@ const Clientes: React.FC = () => {
                     setVistaPreview(null);
                     setModalOpen(true);
                   }}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="flex-1 bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"
                 >
                   Editar Cliente
                 </button>
