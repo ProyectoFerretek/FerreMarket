@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Calendar, User, CreditCard, Package } from 'lucide-react';
+import { X, Calendar, User, CreditCard, Package, Clock } from 'lucide-react';
 import { formatPrecio, formatFecha, getNombreCliente, getEstadoVenta } from '../../utils/formatters';
 import { clientes, productos } from '../../data/mockData';
 
@@ -58,11 +58,14 @@ const VentaPreview: React.FC<VentaPreviewProps> = ({ venta, onClose }) => {
                                 </div>
                             </div>
 
-                            <div>
-                                <p className="text-sm text-gray-500">Estado</p>
-                                <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${estadoInfo.color}`}>
-                                    {estadoInfo.label}
-                                </span>
+                            <div className="flex items-center">
+                                <Clock size={20} className="text-gray-400 mr-3" />
+                                <div>
+                                    <p className="text-sm text-gray-500">Estado</p>
+                                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${estadoInfo.color}`}>
+                                        {estadoInfo.label}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -107,9 +110,6 @@ const VentaPreview: React.FC<VentaPreviewProps> = ({ venta, onClose }) => {
                                                         <div>
                                                             <p className="text-sm font-medium text-gray-900">
                                                                 {producto?.nombre}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500">
-                                                                Stock actual: {producto?.stock} unidades
                                                             </p>
                                                         </div>
                                                     </div>

@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   Plus, Search, Filter, ArrowUpDown, Edit2, Trash2, 
   CheckCircle, AlertTriangle, AlertCircle, Circle,
@@ -10,6 +11,7 @@ import ProductoModal from '../components/modals/ProductoModal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 
 const Productos: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any>(null);
@@ -22,6 +24,18 @@ const Productos: React.FC = () => {
   const [ordenamiento, setOrdenamiento] = useState({ campo: '', direccion: 'asc' });
   const [mostrarFiltros, setMostrarFiltros] = useState(false);
   const [vistaActual, setVistaActual] = useState<'tabla' | 'grid'>('grid');
+
+      // Efecto para aplicar filtro de categoría desde URL
+  useEffect(() => {
+    const categoriaParam = searchParams.get('categoria');
+    if (categoriaParam) {
+      setFiltroCategoria(categoriaParam);
+      // Limpiar el parámetro de la URL después de aplicarlo
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('categoria');
+      setSearchParams(newSearchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const getEstadoIcono = (estado: string) => {
     switch (estado) {
