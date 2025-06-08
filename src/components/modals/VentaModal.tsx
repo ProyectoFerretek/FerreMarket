@@ -372,8 +372,6 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                         <option value="Tarjeta de crédito">Tarjeta de crédito</option>
                         <option value="Tarjeta de débito">Tarjeta de débito</option>
                         <option value="Transferencia">Transferencia bancaria</option>
-                        <option value="Yape">Yape</option>
-                        <option value="Plin">Plin</option>
                       </select>
                     </div>
                   </div>

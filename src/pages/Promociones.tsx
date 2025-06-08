@@ -9,9 +9,10 @@ import {
 import { formatPrecio, formatFecha } from '../utils/formatters';
 import { productos, categorias, clientes, ventas } from '../data/mockData';
 import ConfirmDialog from '../components/common/ConfirmDialog';
+import PromocionModal from '../components/modals/PromocionModal';
 
 // Mock data para promociones
-const promociones = [
+const promocionesIniciales = [
   {
     id: 'PROMO001',
     codigo: 'DESCUENTO20',
@@ -133,6 +134,7 @@ const promociones = [
 
 const Promociones: React.FC = () => {
   // Estados principales
+  const [promociones, setPromociones] = useState(promocionesIniciales);
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [promocionSeleccionada, setPromocionSeleccionada] = useState<any>(null);
@@ -168,7 +170,7 @@ const Promociones: React.FC = () => {
       ingresoTotal,
       promedioConversion: promedioConversion.toFixed(1)
     };
-  }, []);
+  }, [promociones]);
 
   // Filtrar promociones
   const promocionesFiltradas = useMemo(() => {
@@ -208,6 +210,27 @@ const Promociones: React.FC = () => {
       campo,
       direccion: prev.campo === campo && prev.direccion === 'asc' ? 'desc' : 'asc'
     }));
+  };
+
+  const handleGuardarPromocion = (promocionData: any) => {
+    if (promocionSeleccionada) {
+      // Editar promoción existente
+      setPromociones(prev => prev.map(p => 
+        p.id === promocionSeleccionada.id ? { ...p, ...promocionData } : p
+      ));
+    } else {
+      // Crear nueva promoción
+      setPromociones(prev => [...prev, promocionData]);
+    }
+    setPromocionSeleccionada(null);
+  };
+
+  const handleEliminarPromocion = () => {
+    if (promocionSeleccionada) {
+      setPromociones(prev => prev.filter(p => p.id !== promocionSeleccionada.id));
+      setPromocionSeleccionada(null);
+      setConfirmOpen(false);
+    }
   };
 
   const limpiarFiltros = () => {
@@ -654,7 +677,10 @@ const Promociones: React.FC = () => {
           <p className="text-gray-600 mt-1">Gestiona descuentos y promociones para tus clientes</p>
         </div>
         <button
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            setPromocionSeleccionada(null);
+            setModalOpen(true);
+          }}
           className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center transition-colors"
         >
           <Plus size={20} className="mr-2" />
@@ -811,32 +837,16 @@ const Promociones: React.FC = () => {
         />
       )}
 
-      {/* Modal de creación/edición (placeholder) */}
+      {/* Modal de creación/edición */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-2xl p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {promocionSeleccionada ? 'Editar Promoción' : 'Nueva Promoción'}
-              </h2>
-              <button
-                onClick={() => {
-                  setModalOpen(false);
-                  setPromocionSeleccionada(null);
-                }}
-                className="text-gray-400 hover:text-gray-500"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="text-center py-8">
-              <p className="text-gray-500">Modal de creación/edición de promociones</p>
-              <p className="text-sm text-gray-400 mt-2">
-                Aquí iría el formulario completo para crear y editar promociones
-              </p>
-            </div>
-          </div>
-        </div>
+        <PromocionModal
+          promocion={promocionSeleccionada}
+          onClose={() => {
+            setModalOpen(false);
+            setPromocionSeleccionada(null);
+          }}
+          onSave={handleGuardarPromocion}
+        />
       )}
 
       {/* Diálogo de confirmación */}
@@ -844,11 +854,7 @@ const Promociones: React.FC = () => {
         <ConfirmDialog
           titulo="Eliminar Promoción"
           mensaje={`¿Estás seguro de que deseas eliminar la promoción "${promocionSeleccionada?.nombre}"?`}
-          onConfirm={() => {
-            console.log('Eliminando promoción:', promocionSeleccionada);
-            setConfirmOpen(false);
-            setPromocionSeleccionada(null);
-          }}
+          onConfirm={handleEliminarPromocion}
           onCancel={() => setConfirmOpen(false)}
         />
       )}
