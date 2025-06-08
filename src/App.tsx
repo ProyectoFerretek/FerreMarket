@@ -11,6 +11,7 @@ import NotFound from './pages/NotFound';
 import Productos from './pages/Productos';
 import Clientes from './pages/Clientes';
 import Ventas from './pages/Ventas';
+import Promociones from './pages/Promociones';
 import Reportes from './pages/Reportes';
 import GestionUsuarios from './pages/Usuarios';
 
@@ -24,6 +25,7 @@ function App() {
           <Route path="productos" element={<Productos />} />
           <Route path="clientes" element={<Clientes />} />
           <Route path="ventas" element={<Ventas />} />
+          <Route path="promociones" element={<Promociones />} />
           <Route path="reportes" element={<Reportes />} />
           <Route path="usuarios" element={<GestionUsuarios />} />
           <Route path="*" element={<NotFound />} />
