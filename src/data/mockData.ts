@@ -18,7 +18,7 @@ export const productos: Producto[] = [
     descripcion: 'Taladro recargable con batería de larga duración y maletín',
     precio: 59990,
     categoria: '1',
-    stock: 15,
+    stock: 0,
     imagen: 'src/assets/images/Taladro.webp',
     destacado: true
   },
@@ -58,7 +58,7 @@ export const productos: Producto[] = [
     descripcion: 'Cable flexible para instalaciones domésticas',
     precio: 8990,
     categoria: '3',
-    stock: 56,
+    stock: 2,
     imagen: 'src/assets/images/Taladro.webp',
     destacado: false
   },
