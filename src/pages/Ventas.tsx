@@ -117,7 +117,7 @@ const Ventas: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 pt-16">
+        <div className="space-y-6">
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>

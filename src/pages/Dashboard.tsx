@@ -5,7 +5,7 @@ import { productos, ventas, estadisticasVentas, clientes } from '../data/mockDat
 
 import EstadisticaCard from '../components/dashboard/EstadisticaCard';
 import GraficoVentas from '../components/dashboard/GraficoVentas';
-// import ProductosDestacados from '../components/dashboard/ProductosDestacados';
+import ProductosDestacados from '../components/dashboard/ProductosDestacados';
 import VentasRecientes from '../components/dashboard/VentasRecientes';
 import CategoriasProductos from '../components/dashboard/CategoriasProductos';
 
@@ -22,44 +22,44 @@ const Dashboard: React.FC = () => {
   const incrementoVentas = Math.round((ultimoDia - penultimoDia) / penultimoDia * 100);
 
   return (
-    <div className="space-y-6 pt-16">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-700 mt-1 text-base">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+        <p className="text-gray-700 mt-1 text-sm sm:text-base">
           Bienvenido al panel de control de FerreMarket. Aquí encontrarás un resumen de la actividad de tu negocio.
         </p>
       </div>
 
       {/* Tarjetas de estadísticas */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <EstadisticaCard
           titulo="Ventas Totales"
-          valor={totalVentas}
-          icono={<ShoppingCart size={24} className="text-white" />}
-          colorClase="bg-blue-700 text-white"
+          valor={formatPrecio(totalVentas)}
+          icono={<ShoppingCart size={20} className="text-white" />}
+          colorClase="bg-orange-500 text-white"
           incremento={incrementoVentas}
           comparacionTexto="vs. ayer"
         />
 
         <EstadisticaCard
           titulo="Valor del Inventario"
-          valor={valorInventario}
-          icono={<DollarSign size={24} className="text-white" />}
-          colorClase="bg-blue-800 text-white"
+          valor={formatPrecio(valorInventario)}
+          icono={<DollarSign size={20} className="text-white" />}
+          colorClase="bg-orange-500 text-white"
         />
 
         <EstadisticaCard
           titulo="Total de Productos"
           valor={totalProductos}
-          icono={<Package size={24} className="text-white" />}
-          colorClase="bg-blue-600 text-white"
+          icono={<Package size={20} className="text-white" />}
+          colorClase="bg-orange-500 text-white"
         />
 
         <EstadisticaCard
           titulo="Clientes Registrados"
           valor={totalClientes}
-          icono={<Users size={24} className="text-white" />}
-          colorClase="bg-blue-900 text-white"
+          icono={<Users size={20} className="text-white" />}
+          colorClase="bg-orange-500 text-white"
         />
       </div>
 
@@ -74,8 +74,8 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Productos destacados y ventas recientes */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        {/* <ProductosDestacados /> */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 sm:gap-6">
+        <ProductosDestacados />
         <VentasRecientes />
       </div>
     </div>

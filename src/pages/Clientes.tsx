@@ -59,9 +59,12 @@ const Clientes: React.FC = () => {
     };
 
     return (
-        <div className="space-y-6 pt-16">
+        <div className="space-y-6">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-gray-900">Clientes</h1>
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
+                    <p className="text-gray-600 mt-1">Administre los datos de clientes, edite información y gestione usuarios registrados.</p>
+                </div>
                 <button
                     onClick={() => setModalOpen(true)}
                     className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center"

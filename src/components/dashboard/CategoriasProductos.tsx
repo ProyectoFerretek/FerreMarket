@@ -7,19 +7,19 @@ const CategoriasProductos: React.FC = () => {
   const getIcono = (iconoNombre: string) => {
     switch (iconoNombre) {
       case 'tool':
-        return <Tool size={24} />;
+        return <Tool size={20} />;
       case 'paintbrush':
-        return <Paintbrush size={24} />;
+        return <Paintbrush size={20} />;
       case 'zap':
-        return <Zap size={24} />;
+        return <Zap size={20} />;
       case 'droplets':
-        return <Droplets size={24} />;
+        return <Droplets size={20} />;
       case 'box':
-        return <Box size={24} />;
+        return <Box size={20} />;
       case 'flower':
-        return <Flower size={24} />;
+        return <Flower size={20} />;
       default:
-        return <Box size={24} />;
+        return <Box size={20} />;
     }
   };
 
@@ -34,20 +34,29 @@ const CategoriasProductos: React.FC = () => {
   ];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-100">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Categorías de Productos</h3>
-      
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100">
+      <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4">Categorías de Productos</h3>
+
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         {categorias.map((categoria, index) => (
-          <div 
+          <div
             key={categoria.id}
-            className="flex flex-col items-center justify-center p-4 rounded-lg border border-gray-100 hover:border-gray-300 transition-colors cursor-pointer"
+            className="flex flex-col items-center justify-center p-3 sm:p-4 rounded-lg border border-gray-100 hover:border-gray-300 transition-all duration-200 cursor-pointer hover:shadow-sm group"
           >
-            <div className={`w-12 h-12 rounded-full ${colores[index % colores.length]} flex items-center justify-center mb-3`}>
+            {/* Contenedor del icono con dimensiones fijas */}
+            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full ${colores[index % colores.length]} flex items-center justify-center mb-3 transition-transform duration-200 group-hover:scale-105`}>
               {getIcono(categoria.icono)}
             </div>
-            <h4 className="text-sm font-medium text-gray-800 text-center">{categoria.nombre}</h4>
-            <p className="text-xs text-gray-500 mt-1">{categoria.cantidad} productos</p>
+
+            {/* Contenedor de texto con alineación centrada */}
+            <div className="flex flex-col items-center justify-center text-center space-y-1 min-h-[2.5rem] sm:min-h-[3rem]">
+              <h4 className="text-xs sm:text-sm font-medium text-gray-800 leading-tight px-1 line-clamp-2">
+                {categoria.nombre}
+              </h4>
+              <p className="text-xs text-gray-500 font-normal whitespace-nowrap">
+                {categoria.cantidad} productos
+              </p>
+            </div>
           </div>
         ))}
       </div>
