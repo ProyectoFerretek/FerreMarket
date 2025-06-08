@@ -1,5 +1,5 @@
 import React from 'react';
-import { ShoppingCart, DollarSign, Package, Users } from 'lucide-react';
+import { ShoppingCart, DollarSign, Package, Users, Library } from 'lucide-react';
 import { formatPrecio, calcularStockTotal, calcularValorInventario } from '../utils/formatters';
 import { productos, ventas, estadisticasVentas, clientes } from '../data/mockData';
 
@@ -23,8 +23,11 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="space-y-4 sm:space-y-6">
-      <div className="mb-4 sm:mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Dashboard</h1>
+      <div>
+        <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+          <Library size={28} className="mr-3 text-blue-600" />
+          Dashboard
+        </h1>
         <p className="text-gray-700 mt-1 text-sm sm:text-base">
           Bienvenido al panel de control de FerreMarket. Aquí encontrarás un resumen de la actividad de tu negocio.
         </p>

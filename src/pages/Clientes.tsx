@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Plus, Search, Edit2, Trash2, ArrowUpDown } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, ArrowUpDown, User } from 'lucide-react';
 import { clientes } from '../data/mockData';
 import { formatFecha } from '../utils/formatters';
 import ClienteModal from '../components/modals/ClienteModal';
@@ -62,8 +62,13 @@ const Clientes: React.FC = () => {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Gestión de Usuarios</h1>
-                    <p className="text-gray-600 mt-1">Administre los datos de clientes, edite información y gestione usuarios registrados.</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                        <User size={28} className="mr-3 text-blue-600" />
+                        Clientes
+                    </h1>
+                    <p className="text-gray-700 mt-1 text-sm sm:text-base">
+                        Aquí puedes gestionar todos los clientes de tu negocio. Agrega, edita o elimina clientes según sea necesario.
+                    </p>
                 </div>
                 <button
                     onClick={() => setModalOpen(true)}

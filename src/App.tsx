@@ -12,6 +12,7 @@ import Productos from './pages/Productos';
 import Clientes from './pages/Clientes';
 import Ventas from './pages/Ventas';
 import Reportes from './pages/Reportes';
+import GestionUsuarios from './pages/Usuarios';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="clientes" element={<Clientes />} />
           <Route path="ventas" element={<Ventas />} />
           <Route path="reportes" element={<Reportes />} />
+          <Route path="usuarios" element={<GestionUsuarios />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

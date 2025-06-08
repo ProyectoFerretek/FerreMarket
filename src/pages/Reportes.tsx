@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
     Package, DollarSign, AlertTriangle, AlertCircle,
     Search, Filter, Download, FileText, FileSpreadsheet,
-    ArrowUpDown, Calendar, Truck, Plus, Eye
+    ArrowUpDown, Calendar, Truck, Plus, Eye, ChartNoAxesCombined
 } from 'lucide-react';
 import { productos, categorias } from '../data/mockData';
 import { formatPrecio, formatFecha, calcularStockTotal, calcularValorInventario } from '../utils/formatters';
@@ -101,8 +101,13 @@ const Reportes: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Reportes de Inventario</h1>
-                    <p className="text-gray-600 mt-1">Monitorea el estado del inventario y gestiona reposiciones</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                        <ChartNoAxesCombined size={28} className="mr-3 text-blue-600" />
+                        Reportes
+                    </h1>
+                    <p className="text-gray-700 mt-1 text-sm sm:text-base">
+                        Aquí puedes generar reportes detallados de tu inventario, ventas y productos críticos.
+                    </p>
                 </div>
                 <div className="flex space-x-2">
                     <button

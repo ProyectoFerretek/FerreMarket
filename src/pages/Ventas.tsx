@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
     Plus, Search, Filter, Calendar, Download, Eye, Edit2, Trash2,
     ArrowUpDown, FileText, FileSpreadsheet, FileDown, TrendingUp,
-    TrendingDown, DollarSign, ShoppingCart, Users, Clock
+    TrendingDown, DollarSign, ShoppingCart, Users, Clock, ShoppingCartIcon
 } from 'lucide-react';
 import { ventas, clientes, productos } from '../data/mockData';
 import { formatPrecio, formatFecha, getNombreCliente, getEstadoVenta } from '../utils/formatters';
@@ -121,8 +121,13 @@ const Ventas: React.FC = () => {
             {/* Header */}
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Gestión de Ventas</h1>
-                    <p className="text-gray-600 mt-1">Administra y monitorea todas las transacciones</p>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                        <ShoppingCartIcon size={28} className="mr-3 text-blue-600" />
+                        Ventas
+                    </h1>
+                    <p className="text-gray-700 mt-1 text-sm sm:text-base">
+                        Aquí puedes gestionar todas las ventas de tu negocio, desde crear nuevas hasta editar o eliminar las existentes.
+                    </p>
                 </div>
                 <button
                     onClick={() => setModalOpen(true)}

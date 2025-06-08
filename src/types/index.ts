@@ -7,7 +7,6 @@ export interface Producto {
   stock: number;
   imagen: string;
   destacado: boolean;
-  estado: string;
 }
 
 export interface Cliente {
@@ -18,6 +17,8 @@ export interface Cliente {
   direccion: string;
   compras: number;
   ultimaCompra: string;
+  tipoCliente?: 'individual' | 'empresa';
+  identificacion?: string;
 }
 
 export interface Venta {
@@ -52,4 +53,25 @@ export interface Notificacion {
   tipo: 'info' | 'alerta' | 'error';
   fecha: string;
   leida: boolean;
+}
+
+export interface Usuario {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: 'admin' | 'usuario';
+  estado: 'activo' | 'inactivo';
+  fechaCreacion: string;
+  ultimaModificacion: string;
+  ultimoAcceso?: string;
+  avatar?: string;
+}
+
+export interface UsuarioFormData {
+  nombre: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  rol: 'admin' | 'usuario';
+  estado: 'activo' | 'inactivo';
 }

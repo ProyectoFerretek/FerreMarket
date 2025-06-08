@@ -9,7 +9,7 @@ import {
   BarChart2,
   ClipboardList,
   Settings,
-  LogOut
+  LogOut, UserCog
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -22,6 +22,7 @@ interface MenuItem {
   title: string;
   path: string;
   icon: React.ReactNode;
+  requiresAdmin?: boolean;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
@@ -57,7 +58,13 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
       title: 'Reportes',
       path: '/reportes',
       icon: <BarChart2 size={18} />
-    }
+    },
+    {
+      title: 'Gestión de Usuarios',
+      path: '/usuarios',
+      icon: <UserCog size={18} />,
+      requiresAdmin: true
+    },
   ];
 
   const bottomMenuItems: MenuItem[] = [
@@ -122,6 +129,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
                   >
                     <span className="mr-3 flex-shrink-0">{item.icon}</span>
                     <span className="truncate">{item.title}</span>
+                    {item.requiresAdmin && (
+                      <span className="ml-auto">
+                        <UserCog size={12} className="text-blue-300" />
+                      </span>
+                    )}
                   </Link>
                 </li>
               ))}
