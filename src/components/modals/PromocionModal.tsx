@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   X, AlertCircle, Tag, Percent, DollarSign, Calendar, 
   Users, ShoppingCart, Package, Gift, Clock, Target,
@@ -12,6 +12,576 @@ interface PromocionModalProps {
   onClose: () => void;
   onSave: (promocion: any) => void;
 }
+
+// Componente memoizado para información básica
+const PasoInformacionBasica = React.memo(({ 
+  formData, 
+  setFormData, 
+  errors, 
+  getFieldError, 
+  isFieldValid, 
+  generarCodigo, 
+  codigoGenerado 
+}: any) => (
+  <div className="space-y-6">
+    <div>
+      <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4 flex items-center">
+        <Tag size={20} className="mr-2 text-blue-600" />
+        Información Básica
+      </h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Nombre de la Promoción *
+          </label>
+          <input
+            type="text"
+            value={formData.nombre}
+            onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              getFieldError('nombre') ? 'border-red-300 bg-red-50' : 
+              isFieldValid('nombre') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+            }`}
+            placeholder="Ej: Descuento 20% en toda la tienda"
+          />
+          {getFieldError('nombre') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {getFieldError('nombre')}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Código de Promoción *
+          </label>
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={formData.codigo}
+              onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value.toUpperCase() }))}
+              className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                getFieldError('codigo') ? 'border-red-300 bg-red-50' : 
+                isFieldValid('codigo') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+              }`}
+              placeholder="DESCUENTO20"
+            />
+            <button
+              type="button"
+              onClick={generarCodigo}
+              className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center"
+            >
+              <Zap size={16} className="mr-1" />
+              Generar
+            </button>
+          </div>
+          {getFieldError('codigo') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {getFieldError('codigo')}
+            </p>
+          )}
+          {codigoGenerado && (
+            <p className="mt-1 text-sm text-green-600 flex items-center">
+              <CheckCircle size={14} className="mr-1" />
+              Código generado automáticamente
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Tipo de Descuento *
+          </label>
+          <select
+            value={formData.tipo}
+            onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="porcentaje">Porcentaje (%)</option>
+            <option value="monto_fijo">Monto fijo ($)</option>
+            <option value="envio_gratis">Envío gratis</option>
+          </select>
+        </div>
+
+        {formData.tipo !== 'envio_gratis' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Valor del Descuento *
+            </label>
+            <div className="relative">
+              {formData.tipo === 'porcentaje' ? (
+                <Percent size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              ) : (
+                <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              )}
+              <input
+                type="number"
+                min="0"
+                max={formData.tipo === 'porcentaje' ? 100 : undefined}
+                step={formData.tipo === 'porcentaje' ? 0.1 : 1}
+                value={formData.valor}
+                onChange={(e) => setFormData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
+                className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+                  getFieldError('valor') ? 'border-red-300 bg-red-50' : 
+                  isFieldValid('valor') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                }`}
+                placeholder={formData.tipo === 'porcentaje' ? '20' : '15000'}
+              />
+            </div>
+            {getFieldError('valor') && (
+              <p className="mt-1 text-sm text-red-600 flex items-center">
+                <AlertCircle size={14} className="mr-1" />
+                {getFieldError('valor')}
+              </p>
+            )}
+          </div>
+        )}
+
+        {formData.tipo === 'porcentaje' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Descuento Máximo (opcional)
+            </label>
+            <div className="relative">
+              <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="number"
+                min="0"
+                value={formData.valorMaximo}
+                onChange={(e) => setFormData(prev => ({ ...prev, valorMaximo: parseFloat(e.target.value) || 0 }))}
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="50000"
+              />
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Límite máximo del descuento en pesos
+            </p>
+          </div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Compra Mínima (opcional)
+          </label>
+          <div className="relative">
+            <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="number"
+              min="0"
+              value={formData.montoMinimo}
+              onChange={(e) => setFormData(prev => ({ ...prev, montoMinimo: parseFloat(e.target.value) || 0 }))}
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="100000"
+            />
+          </div>
+          <p className="mt-1 text-xs text-gray-500">
+            Monto mínimo de compra para aplicar el descuento
+          </p>
+        </div>
+
+        <div className="md:col-span-2">
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Descripción
+          </label>
+          <textarea
+            value={formData.descripcion}
+            onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+            placeholder="Descripción detallada de la promoción..."
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+));
+
+// Componente memoizado para configuración temporal
+const PasoConfiguracionTemporal = React.memo(({ 
+  formData, 
+  setFormData, 
+  errors, 
+  getFieldError, 
+  isFieldValid 
+}: any) => (
+  <div className="space-y-6">
+    <div>
+      <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4 flex items-center">
+        <Calendar size={20} className="mr-2 text-green-600" />
+        Configuración Temporal
+      </h3>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Fecha de Inicio *
+          </label>
+          <input
+            type="date"
+            value={formData.fechaInicio}
+            onChange={(e) => setFormData(prev => ({ ...prev, fechaInicio: e.target.value }))}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              getFieldError('fechaInicio') ? 'border-red-300 bg-red-50' : 
+              isFieldValid('fechaInicio') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+            }`}
+          />
+          {getFieldError('fechaInicio') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {getFieldError('fechaInicio')}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Hora de Inicio
+          </label>
+          <input
+            type="time"
+            value={formData.horaInicio}
+            onChange={(e) => setFormData(prev => ({ ...prev, horaInicio: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Fecha de Fin *
+          </label>
+          <input
+            type="date"
+            value={formData.fechaFin}
+            onChange={(e) => setFormData(prev => ({ ...prev, fechaFin: e.target.value }))}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              getFieldError('fechaFin') ? 'border-red-300 bg-red-50' : 
+              isFieldValid('fechaFin') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+            }`}
+          />
+          {getFieldError('fechaFin') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {getFieldError('fechaFin')}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Hora de Fin
+          </label>
+          <input
+            type="time"
+            value={formData.horaFin}
+            onChange={(e) => setFormData(prev => ({ ...prev, horaFin: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Zona Horaria
+          </label>
+          <select
+            value={formData.zonaHoraria}
+            onChange={(e) => setFormData(prev => ({ ...prev, zonaHoraria: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="America/Santiago">Santiago (UTC-3)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Límite Total de Usos *
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={formData.limiteTotalUsos}
+            onChange={(e) => setFormData(prev => ({ ...prev, limiteTotalUsos: parseInt(e.target.value) || 0 }))}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              getFieldError('limiteTotalUsos') ? 'border-red-300 bg-red-50' : 
+              isFieldValid('limiteTotalUsos') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+            }`}
+            placeholder="1000"
+          />
+          {getFieldError('limiteTotalUsos') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {getFieldError('limiteTotalUsos')}
+            </p>
+          )}
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Límite por Cliente *
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={formData.limiteUsosPorCliente}
+            onChange={(e) => setFormData(prev => ({ ...prev, limiteUsosPorCliente: parseInt(e.target.value) || 0 }))}
+            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              getFieldError('limiteUsosPorCliente') ? 'border-red-300 bg-red-50' : 
+              isFieldValid('limiteUsosPorCliente') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+            }`}
+            placeholder="5"
+          />
+          {getFieldError('limiteUsosPorCliente') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <AlertCircle size={14} className="mr-1" />
+              {getFieldError('limiteUsosPorCliente')}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  </div>
+));
+
+// Componente memoizado para condiciones específicas
+const PasoCondicionesEspecificas = React.memo(({ 
+  formData, 
+  setFormData 
+}: any) => (
+  <div className="space-y-6">
+    <div>
+      <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4 flex items-center">
+        <Settings size={20} className="mr-2 text-purple-600" />
+        Condiciones Específicas
+      </h3>
+
+      <div className="space-y-6">
+        {/* Aplicación del descuento */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Aplicar Descuento A:
+          </label>
+          <div className="space-y-3">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="toda_tienda"
+                checked={formData.aplicaA === 'toda_tienda'}
+                onChange={(e) => setFormData(prev => ({ ...prev, aplicaA: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700 flex items-center">
+                <Globe size={16} className="mr-2 text-blue-600" />
+                Toda la tienda
+              </span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="productos"
+                checked={formData.aplicaA === 'productos'}
+                onChange={(e) => setFormData(prev => ({ ...prev, aplicaA: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700 flex items-center">
+                <Package size={16} className="mr-2 text-green-600" />
+                Productos específicos
+              </span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="categorias"
+                checked={formData.aplicaA === 'categorias'}
+                onChange={(e) => setFormData(prev => ({ ...prev, aplicaA: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700 flex items-center">
+                <Tag size={16} className="mr-2 text-purple-600" />
+                Categorías específicas
+              </span>
+            </label>
+          </div>
+        </div>
+
+        {/* Selección de productos/categorías */}
+        {formData.aplicaA === 'productos' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Productos Incluidos
+              </label>
+              <select
+                multiple
+                value={formData.productosIncluidos}
+                onChange={(e) => {
+                  const valores = Array.from(e.target.selectedOptions, option => option.value);
+                  setFormData(prev => ({ ...prev, productosIncluidos: valores }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
+              >
+                {productos.map(producto => (
+                  <option key={producto.id} value={producto.id}>
+                    {producto.nombre} - {formatPrecio(producto.precio)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Productos Excluidos
+              </label>
+              <select
+                multiple
+                value={formData.productosExcluidos}
+                onChange={(e) => {
+                  const valores = Array.from(e.target.selectedOptions, option => option.value);
+                  setFormData(prev => ({ ...prev, productosExcluidos: valores }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
+              >
+                {productos.map(producto => (
+                  <option key={producto.id} value={producto.id}>
+                    {producto.nombre} - {formatPrecio(producto.precio)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {formData.aplicaA === 'categorias' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Categorías Incluidas
+              </label>
+              <select
+                multiple
+                value={formData.categoriasIncluidas}
+                onChange={(e) => {
+                  const valores = Array.from(e.target.selectedOptions, option => option.value);
+                  setFormData(prev => ({ ...prev, categoriasIncluidas: valores }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
+              >
+                {categorias.map(categoria => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre} ({categoria.cantidad} productos)
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Categorías Excluidas
+              </label>
+              <select
+                multiple
+                value={formData.categoriasExcluidas}
+                onChange={(e) => {
+                  const valores = Array.from(e.target.selectedOptions, option => option.value);
+                  setFormData(prev => ({ ...prev, categoriasExcluidas: valores }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
+              >
+                {categorias.map(categoria => (
+                  <option key={categoria.id} value={categoria.id}>
+                    {categoria.nombre} ({categoria.cantidad} productos)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Tipo de cliente */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Tipo de Cliente:
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="todos"
+                checked={formData.tipoCliente === 'todos'}
+                onChange={(e) => setFormData(prev => ({ ...prev, tipoCliente: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Todos los clientes</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="nuevo"
+                checked={formData.tipoCliente === 'nuevo'}
+                onChange={(e) => setFormData(prev => ({ ...prev, tipoCliente: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Solo clientes nuevos</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="existente"
+                checked={formData.tipoCliente === 'existente'}
+                onChange={(e) => setFormData(prev => ({ ...prev, tipoCliente: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Solo clientes existentes</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Opciones adicionales */}
+        <div className="space-y-4">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              checked={formData.combinable}
+              onChange={(e) => setFormData(prev => ({ ...prev, combinable: e.target.checked }))}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label className="ml-2 text-sm text-gray-700">
+              Permitir combinación con otras promociones
+            </label>
+          </div>
+        </div>
+
+        {/* Estado inicial */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Estado Inicial:
+          </label>
+          <div className="space-y-2">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="borrador"
+                checked={formData.estado === 'borrador'}
+                onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Guardar como borrador</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                value="activo"
+                checked={formData.estado === 'activo'}
+                onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">Activar inmediatamente</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+));
 
 const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onSave }) => {
   const [paso, setPaso] = useState(1);
@@ -105,7 +675,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
     }
   }, [promocion]);
 
-  const generarCodigo = () => {
+  const generarCodigo = useCallback(() => {
     const prefijos = ['DESC', 'PROMO', 'OFERTA', 'SAVE'];
     const sufijos = ['2024', 'ESPECIAL', 'VIP', 'FLASH'];
     const numeros = Math.floor(Math.random() * 100);
@@ -116,9 +686,9 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
     const codigoGenerado = `${prefijo}${numeros}${sufijo}`;
     setFormData(prev => ({ ...prev, codigo: codigoGenerado }));
     setCodigoGenerado(true);
-  };
+  }, []);
 
-  const validarPaso = (pasoActual: number): boolean => {
+  const validarPaso = useCallback((pasoActual: number): boolean => {
     const nuevosErrores: Record<string, string> = {};
 
     if (pasoActual === 1) {
@@ -167,19 +737,19 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
 
     setErrors(nuevosErrores);
     return Object.keys(nuevosErrores).length === 0;
-  };
+  }, [formData]);
 
-  const handleSiguiente = () => {
+  const handleSiguiente = useCallback(() => {
     if (validarPaso(paso)) {
       setPaso(prev => Math.min(prev + 1, 3));
     }
-  };
+  }, [paso, validarPaso]);
 
-  const handleAnterior = () => {
+  const handleAnterior = useCallback(() => {
     setPaso(prev => Math.max(prev - 1, 1));
-  };
+  }, []);
 
-  const handleSubmit = async () => {
+  const handleSubmit = useCallback(async () => {
     if (!validarPaso(3)) {
       return;
     }
@@ -208,573 +778,27 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [formData, promocion, onSave, onClose, validarPaso]);
 
-  const getFieldError = (fieldName: string) => {
+  const getFieldError = useCallback((fieldName: string) => {
     return errors[fieldName];
-  };
+  }, [errors]);
 
-  const isFieldValid = (fieldName: string) => {
+  const isFieldValid = useCallback((fieldName: string) => {
     const value = formData[fieldName as keyof typeof formData];
     return value && !getFieldError(fieldName);
-  };
+  }, [formData, getFieldError]);
 
-  // Componente de paso 1: Información básica
-  const PasoInformacionBasica = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4 flex items-center">
-          <Tag size={20} className="mr-2 text-blue-600" />
-          Información Básica
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Nombre de la Promoción *
-            </label>
-            <input
-              type="text"
-              value={formData.nombre}
-              onChange={(e) => setFormData(prev => ({ ...prev, nombre: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                getFieldError('nombre') ? 'border-red-300 bg-red-50' : 
-                isFieldValid('nombre') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-              }`}
-              placeholder="Ej: Descuento 20% en toda la tienda"
-            />
-            {getFieldError('nombre') && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {getFieldError('nombre')}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Código de Promoción *
-            </label>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={formData.codigo}
-                onChange={(e) => setFormData(prev => ({ ...prev, codigo: e.target.value.toUpperCase() }))}
-                className={`flex-1 px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                  getFieldError('codigo') ? 'border-red-300 bg-red-50' : 
-                  isFieldValid('codigo') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-                }`}
-                placeholder="DESCUENTO20"
-              />
-              <button
-                type="button"
-                onClick={generarCodigo}
-                className="px-3 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors flex items-center"
-              >
-                <Zap size={16} className="mr-1" />
-                Generar
-              </button>
-            </div>
-            {getFieldError('codigo') && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {getFieldError('codigo')}
-              </p>
-            )}
-            {codigoGenerado && (
-              <p className="mt-1 text-sm text-green-600 flex items-center">
-                <CheckCircle size={14} className="mr-1" />
-                Código generado automáticamente
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Tipo de Descuento *
-            </label>
-            <select
-              value={formData.tipo}
-              onChange={(e) => setFormData(prev => ({ ...prev, tipo: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="porcentaje">Porcentaje (%)</option>
-              <option value="monto_fijo">Monto fijo ($)</option>
-              <option value="envio_gratis">Envío gratis</option>
-            </select>
-          </div>
-
-          {formData.tipo !== 'envio_gratis' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Valor del Descuento *
-              </label>
-              <div className="relative">
-                {formData.tipo === 'porcentaje' ? (
-                  <Percent size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                ) : (
-                  <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                )}
-                <input
-                  type="number"
-                  min="0"
-                  max={formData.tipo === 'porcentaje' ? 100 : undefined}
-                  step={formData.tipo === 'porcentaje' ? 0.1 : 1}
-                  value={formData.valor}
-                  onChange={(e) => setFormData(prev => ({ ...prev, valor: parseFloat(e.target.value) || 0 }))}
-                  className={`w-full pl-10 pr-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                    getFieldError('valor') ? 'border-red-300 bg-red-50' : 
-                    isFieldValid('valor') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-                  }`}
-                  placeholder={formData.tipo === 'porcentaje' ? '20' : '15000'}
-                />
-              </div>
-              {getFieldError('valor') && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle size={14} className="mr-1" />
-                  {getFieldError('valor')}
-                </p>
-              )}
-            </div>
-          )}
-
-          {formData.tipo === 'porcentaje' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Descuento Máximo (opcional)
-              </label>
-              <div className="relative">
-                <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.valorMaximo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, valorMaximo: parseFloat(e.target.value) || 0 }))}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="50000"
-                />
-              </div>
-              <p className="mt-1 text-xs text-gray-500">
-                Límite máximo del descuento en pesos
-              </p>
-            </div>
-          )}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Compra Mínima (opcional)
-            </label>
-            <div className="relative">
-              <DollarSign size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="number"
-                min="0"
-                value={formData.montoMinimo}
-                onChange={(e) => setFormData(prev => ({ ...prev, montoMinimo: parseFloat(e.target.value) || 0 }))}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="100000"
-              />
-            </div>
-            <p className="mt-1 text-xs text-gray-500">
-              Monto mínimo de compra para aplicar el descuento
-            </p>
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Descripción
-            </label>
-            <textarea
-              value={formData.descripcion}
-              onChange={(e) => setFormData(prev => ({ ...prev, descripcion: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="Descripción detallada de la promoción..."
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Componente de paso 2: Configuración temporal
-  const PasoConfiguracionTemporal = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4 flex items-center">
-          <Calendar size={20} className="mr-2 text-green-600" />
-          Configuración Temporal
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fecha de Inicio *
-            </label>
-            <input
-              type="date"
-              value={formData.fechaInicio}
-              onChange={(e) => setFormData(prev => ({ ...prev, fechaInicio: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                getFieldError('fechaInicio') ? 'border-red-300 bg-red-50' : 
-                isFieldValid('fechaInicio') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-              }`}
-            />
-            {getFieldError('fechaInicio') && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {getFieldError('fechaInicio')}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hora de Inicio
-            </label>
-            <input
-              type="time"
-              value={formData.horaInicio}
-              onChange={(e) => setFormData(prev => ({ ...prev, horaInicio: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Fecha de Fin *
-            </label>
-            <input
-              type="date"
-              value={formData.fechaFin}
-              onChange={(e) => setFormData(prev => ({ ...prev, fechaFin: e.target.value }))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                getFieldError('fechaFin') ? 'border-red-300 bg-red-50' : 
-                isFieldValid('fechaFin') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-              }`}
-            />
-            {getFieldError('fechaFin') && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {getFieldError('fechaFin')}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Hora de Fin
-            </label>
-            <input
-              type="time"
-              value={formData.horaFin}
-              onChange={(e) => setFormData(prev => ({ ...prev, horaFin: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Zona Horaria
-            </label>
-            <select
-              value={formData.zonaHoraria}
-              onChange={(e) => setFormData(prev => ({ ...prev, zonaHoraria: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="America/Lima">Lima (UTC-5)</option>
-              <option value="America/Santiago">Santiago (UTC-3)</option>
-              <option value="America/Buenos_Aires">Buenos Aires (UTC-3)</option>
-              <option value="America/Mexico_City">Ciudad de México (UTC-6)</option>
-              <option value="America/New_York">Nueva York (UTC-5)</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Límite Total de Usos *
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={formData.limiteTotalUsos}
-              onChange={(e) => setFormData(prev => ({ ...prev, limiteTotalUsos: parseInt(e.target.value) || 0 }))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                getFieldError('limiteTotalUsos') ? 'border-red-300 bg-red-50' : 
-                isFieldValid('limiteTotalUsos') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-              }`}
-              placeholder="1000"
-            />
-            {getFieldError('limiteTotalUsos') && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {getFieldError('limiteTotalUsos')}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Límite por Cliente *
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={formData.limiteUsosPorCliente}
-              onChange={(e) => setFormData(prev => ({ ...prev, limiteUsosPorCliente: parseInt(e.target.value) || 0 }))}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                getFieldError('limiteUsosPorCliente') ? 'border-red-300 bg-red-50' : 
-                isFieldValid('limiteUsosPorCliente') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-              }`}
-              placeholder="5"
-            />
-            {getFieldError('limiteUsosPorCliente') && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle size={14} className="mr-1" />
-                {getFieldError('limiteUsosPorCliente')}
-              </p>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
-  // Componente de paso 3: Condiciones específicas
-  const PasoCondicionesEspecificas = () => (
-    <div className="space-y-6">
-      <div>
-        <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4 flex items-center">
-          <Settings size={20} className="mr-2 text-purple-600" />
-          Condiciones Específicas
-        </h3>
-
-        <div className="space-y-6">
-          {/* Aplicación del descuento */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Aplicar Descuento A:
-            </label>
-            <div className="space-y-3">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="toda_tienda"
-                  checked={formData.aplicaA === 'toda_tienda'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, aplicaA: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700 flex items-center">
-                  <Globe size={16} className="mr-2 text-blue-600" />
-                  Toda la tienda
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="productos"
-                  checked={formData.aplicaA === 'productos'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, aplicaA: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700 flex items-center">
-                  <Package size={16} className="mr-2 text-green-600" />
-                  Productos específicos
-                </span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="categorias"
-                  checked={formData.aplicaA === 'categorias'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, aplicaA: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700 flex items-center">
-                  <Tag size={16} className="mr-2 text-purple-600" />
-                  Categorías específicas
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Selección de productos/categorías */}
-          {formData.aplicaA === 'productos' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Productos Incluidos
-                </label>
-                <select
-                  multiple
-                  value={formData.productosIncluidos}
-                  onChange={(e) => {
-                    const valores = Array.from(e.target.selectedOptions, option => option.value);
-                    setFormData(prev => ({ ...prev, productosIncluidos: valores }));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
-                >
-                  {productos.map(producto => (
-                    <option key={producto.id} value={producto.id}>
-                      {producto.nombre} - {formatPrecio(producto.precio)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Productos Excluidos
-                </label>
-                <select
-                  multiple
-                  value={formData.productosExcluidos}
-                  onChange={(e) => {
-                    const valores = Array.from(e.target.selectedOptions, option => option.value);
-                    setFormData(prev => ({ ...prev, productosExcluidos: valores }));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
-                >
-                  {productos.map(producto => (
-                    <option key={producto.id} value={producto.id}>
-                      {producto.nombre} - {formatPrecio(producto.precio)}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {formData.aplicaA === 'categorias' && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Categorías Incluidas
-                </label>
-                <select
-                  multiple
-                  value={formData.categoriasIncluidas}
-                  onChange={(e) => {
-                    const valores = Array.from(e.target.selectedOptions, option => option.value);
-                    setFormData(prev => ({ ...prev, categoriasIncluidas: valores }));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
-                >
-                  {categorias.map(categoria => (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nombre} ({categoria.cantidad} productos)
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Categorías Excluidas
-                </label>
-                <select
-                  multiple
-                  value={formData.categoriasExcluidas}
-                  onChange={(e) => {
-                    const valores = Array.from(e.target.selectedOptions, option => option.value);
-                    setFormData(prev => ({ ...prev, categoriasExcluidas: valores }));
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32"
-                >
-                  {categorias.map(categoria => (
-                    <option key={categoria.id} value={categoria.id}>
-                      {categoria.nombre} ({categoria.cantidad} productos)
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* Tipo de cliente */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Tipo de Cliente:
-            </label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="todos"
-                  checked={formData.tipoCliente === 'todos'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tipoCliente: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Todos los clientes</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="nuevo"
-                  checked={formData.tipoCliente === 'nuevo'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tipoCliente: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Solo clientes nuevos</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="existente"
-                  checked={formData.tipoCliente === 'existente'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, tipoCliente: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Solo clientes existentes</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Opciones adicionales */}
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                checked={formData.combinable}
-                onChange={(e) => setFormData(prev => ({ ...prev, combinable: e.target.checked }))}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              />
-              <label className="ml-2 text-sm text-gray-700">
-                Permitir combinación con otras promociones
-              </label>
-            </div>
-          </div>
-
-          {/* Estado inicial */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">
-              Estado Inicial:
-            </label>
-            <div className="space-y-2">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="borrador"
-                  checked={formData.estado === 'borrador'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Guardar como borrador</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  value="activo"
-                  checked={formData.estado === 'activo'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">Activar inmediatamente</span>
-              </label>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // Memoizar las props para los componentes de paso
+  const pasoProps = useMemo(() => ({
+    formData,
+    setFormData,
+    errors,
+    getFieldError,
+    isFieldValid,
+    generarCodigo,
+    codigoGenerado
+  }), [formData, errors, getFieldError, isFieldValid, generarCodigo, codigoGenerado]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-2 sm:p-4">
@@ -845,9 +869,9 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
         {/* Contenido del formulario con scroll */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6">
-            {paso === 1 && <PasoInformacionBasica />}
-            {paso === 2 && <PasoConfiguracionTemporal />}
-            {paso === 3 && <PasoCondicionesEspecificas />}
+            {paso === 1 && <PasoInformacionBasica {...pasoProps} />}
+            {paso === 2 && <PasoConfiguracionTemporal {...pasoProps} />}
+            {paso === 3 && <PasoCondicionesEspecificas {...pasoProps} />}
           </div>
         </div>
 

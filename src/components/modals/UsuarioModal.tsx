@@ -115,8 +115,8 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ usuario, onClose, onSave })
     try {
       // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1000));
-      
       onSave(formData);
+      
       onClose();
     } catch (error) {
       setErrors({ general: 'Error al guardar el usuario. Inténtalo de nuevo.' });
