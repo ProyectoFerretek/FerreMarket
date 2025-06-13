@@ -316,6 +316,74 @@ export const notificaciones: Notificacion[] = [
 
 // export const usuarios: Usuario[] = [];
 
+//   {
+//     id: '6',
+//     nombre: 'Llave Ajustable 10"',
+//     descripcion: 'Llave de alta resistencia para múltiples usos',
+//     precio: 7990,
+//     categoria: '1',
+//     stock: 19,
+//     imagen: 'src/assets/images/Taladro.webp',
+//     destacado: false
+//   },
+
+export const agregarProducto = async (producto: Producto) => {
+	const productosCollection = collection(dbFirestore, 'productos');
+	const docRef = await addDoc(productosCollection, {
+		sku: producto.sku,
+		nombre: producto.nombre,
+		descripcion: producto.descripcion,
+		precio: producto.precio,
+		categoria: producto.categoria,
+		stock: producto.stock,
+		imagen: producto.imagen,
+		destacado: producto.destacado
+	});
+	
+	console.log('Producto agregado con ID:', docRef.id);
+}
+
+export const actualizarProducto = async (id: string, producto: Producto) => {
+	const productoDoc = doc(dbFirestore, 'productos', id);
+	await updateDoc(productoDoc, {
+		nombre: producto.nombre,
+		descripcion: producto.descripcion,
+		precio: producto.precio,
+		categoria: producto.categoria,
+		stock: producto.stock,
+		imagen: producto.imagen,
+		destacado: producto.destacado
+	});
+}
+
+export const eliminarProducto = async (id: string) => {
+	const productoDoc = doc(dbFirestore, 'productos', id);
+	await deleteDoc(productoDoc);
+}
+
+export const obtenerProductos = async (): Promise<Producto[]> => {
+	const productosCollection = collection(dbFirestore, 'productos');
+	const productosSnapshot = await getDocs(productosCollection);
+	const productosList: Producto[] = [];
+
+	productosSnapshot.forEach((doc) => {
+		const productoData = doc.data() as Producto;
+		productosList.push({
+			id: doc.id,
+			sku: productoData.sku,
+			nombre: productoData.nombre,
+			descripcion: productoData.descripcion,
+			precio: productoData.precio,
+			categoria: productoData.categoria,
+			stock: productoData.stock,
+			imagen: productoData.imagen || 'src/assets/images/Taladro.webp',
+			destacado: productoData.destacado || false
+		});
+	})
+
+	return productosList;
+}
+
 export const obtenerUsuarios = async (): Promise<Usuario[]> => {
 	const usuariosCollection = collection(dbFirestore, 'usuarios');
 	const usuariosSnapshot = await getDocs(usuariosCollection);

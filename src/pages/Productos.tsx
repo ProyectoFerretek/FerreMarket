@@ -19,7 +19,7 @@ import {
     Calculator,
     Box,
 } from "lucide-react";
-import { productos, categorias } from "../data/mockData";
+import { categorias, eliminarProducto, obtenerProductos } from "../data/mockData";
 import { formatPrecio } from "../utils/formatters";
 import ProductoModal from "../components/modals/ProductoModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
@@ -41,6 +41,16 @@ const Productos: React.FC = () => {
     });
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
     const [vistaActual, setVistaActual] = useState<"tabla" | "grid">("grid");
+    const [productos, setProductos] = useState<Producto[]>([]);
+    
+    const cargarProductos = async () => {
+        const productosData = await obtenerProductos();
+        setProductos(productosData);
+    }
+
+    useEffect(() => {
+        cargarProductos();
+    }, []);
 
     // Efecto para aplicar filtro de categoría desde URL
     useEffect(() => {
@@ -152,8 +162,10 @@ const Productos: React.FC = () => {
         setConfirmOpen(true);
     };
 
-    const confirmarEliminacion = () => {
-        console.log("Eliminando producto:", productoSeleccionado);
+    const confirmarEliminacion = async () => {
+        eliminarProducto(productoSeleccionado.id);
+        await cargarProductos(); // Recargar productos después de eliminar
+
         setConfirmOpen(false);
         setProductoSeleccionado(null);
     };
@@ -682,6 +694,7 @@ const Productos: React.FC = () => {
                 <ProductoModal
                     producto={productoSeleccionado}
                     onClose={() => {
+                        cargarProductos();
                         setModalOpen(false);
                         setProductoSeleccionado(null);
                     }}
