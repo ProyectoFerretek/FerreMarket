@@ -1,4 +1,20 @@
-import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario } from '../types';
+import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UsuarioFirebase } from '../types';
+
+import { dbFirestore } from '../lib/firebase/Firebase';
+import { 
+    collection, 
+    addDoc, 
+    getDocs, 
+    getDoc,
+    doc, 
+    setDoc,
+    updateDoc, 
+    deleteDoc,
+    onSnapshot,
+    query,
+    where,
+    orderBy
+} from 'firebase/firestore';
 
 // Categorías de productos
 export const categorias: Categoria[] = [
@@ -229,74 +245,128 @@ export const notificaciones: Notificacion[] = [
 ];
 
 // Usuarios del sistema
-export const usuarios: Usuario[] = [
-  {
-    id: '1',
-    nombre: 'Administrador Principal',
-    email: 'admin@ferremarket.com',
-    rol: 'admin',
-    estado: 'activo',
-    fechaCreacion: '2024-01-15T10:00:00',
-    ultimaModificacion: '2025-04-19T14:30:00',
-    ultimoAcceso: '2025-04-19T15:45:00',
-    avatar: 'src/assets/images/Taladro.webp'
-  },
-  {
-    id: '2',
-    nombre: 'Carlos Mendoza',
-    email: 'carlos.mendoza@ferremarket.com',
-    rol: 'admin',
-    estado: 'activo',
-    fechaCreacion: '2024-02-20T09:15:00',
-    ultimaModificacion: '2025-04-18T16:20:00',
-    ultimoAcceso: '2025-04-19T08:30:00',
-    avatar: 'src/assets/images/Taladro.webp'
-  },
-  {
-    id: '3',
-    nombre: 'Ana Rodríguez',
-    email: 'ana.rodriguez@ferremarket.com',
-    rol: 'usuario',
-    estado: 'activo',
-    fechaCreacion: '2024-03-10T11:30:00',
-    ultimaModificacion: '2025-04-17T10:45:00',
-    ultimoAcceso: '2025-04-19T12:15:00',
-    avatar: 'src/assets/images/Taladro.webp'
-  },
-  {
-    id: '4',
-    nombre: 'Luis García',
-    email: 'luis.garcia@ferremarket.com',
-    rol: 'usuario',
-    estado: 'activo',
-    fechaCreacion: '2024-04-05T14:20:00',
-    ultimaModificacion: '2025-04-16T09:30:00',
-    ultimoAcceso: '2025-04-18T17:20:00',
-    avatar: 'src/assets/images/Taladro.webp'
-  },
-  {
-    id: '5',
-    nombre: 'María Fernández',
-    email: 'maria.fernandez@ferremarket.com',
-    rol: 'usuario',
-    estado: 'inactivo',
-    fechaCreacion: '2024-01-30T16:45:00',
-    ultimaModificacion: '2025-04-10T11:15:00',
-    ultimoAcceso: '2025-04-10T11:15:00',
-    avatar: 'src/assets/images/Taladro.webp'
-  },
-  {
-    id: '6',
-    nombre: 'Roberto Silva',
-    email: 'roberto.silva@ferremarket.com',
-    rol: 'usuario',
-    estado: 'activo',
-    fechaCreacion: '2024-05-12T13:10:00',
-    ultimaModificacion: '2025-04-19T08:45:00',
-    ultimoAcceso: '2025-04-19T14:20:00',
-    avatar: 'src/assets/images/Taladro.webp'
-  }
-];
+// export const usuarios: Usuario[] = [
+//   {
+//     id: '1',
+//     nombre: 'Administrador Principal',
+//     email: 'admin@ferremarket.com',
+//     rol: 'admin',
+//     estado: 'activo',
+//     fechaCreacion: '2024-01-15T10:00:00',
+//     ultimaModificacion: '2025-04-19T14:30:00',
+//     ultimoAcceso: '2025-04-19T15:45:00',
+//     avatar: 'src/assets/images/Taladro.webp'
+//   },
+//   {
+//     id: '2',
+//     nombre: 'Carlos Mendoza',
+//     email: 'carlos.mendoza@ferremarket.com',
+//     rol: 'admin',
+//     estado: 'activo',
+//     fechaCreacion: '2024-02-20T09:15:00',x
+//     ultimaModificacion: '2025-04-18T16:20:00',
+//     ultimoAcceso: '2025-04-19T08:30:00',
+//     avatar: 'src/assets/images/Taladro.webp'
+//   },
+//   {
+//     id: '3',
+//     nombre: 'Ana Rodríguez',
+//     email: 'ana.rodriguez@ferremarket.com',
+//     rol: 'usuario',
+//     estado: 'activo',
+//     fechaCreacion: '2024-03-10T11:30:00',
+//     ultimaModificacion: '2025-04-17T10:45:00',
+//     ultimoAcceso: '2025-04-19T12:15:00',
+//     avatar: 'src/assets/images/Taladro.webp'
+//   },
+//   {
+//     id: '4',
+//     nombre: 'Luis García',
+//     email: 'luis.garcia@ferremarket.com',
+//     rol: 'usuario',
+//     estado: 'activo',
+//     fechaCreacion: '2024-04-05T14:20:00',
+//     ultimaModificacion: '2025-04-16T09:30:00',
+//     ultimoAcceso: '2025-04-18T17:20:00',
+//     avatar: 'src/assets/images/Taladro.webp'
+//   },
+//   {
+//     id: '5',
+//     nombre: 'María Fernández',
+//     email: 'maria.fernandez@ferremarket.com',
+//     rol: 'usuario',
+//     estado: 'inactivo',
+//     fechaCreacion: '2024-01-30T16:45:00',
+//     ultimaModificacion: '2025-04-10T11:15:00',
+//     ultimoAcceso: '2025-04-10T11:15:00',
+//     avatar: 'src/assets/images/Taladro.webp'
+//   },
+//   {
+//     id: '6',
+//     nombre: 'Roberto Silva',
+//     email: 'roberto.silva@ferremarket.com',
+//     rol: 'usuario',
+//     estado: 'activo',
+//     fechaCreacion: '2024-05-12T13:10:00',
+//     ultimaModificacion: '2025-04-19T08:45:00',
+//     ultimoAcceso: '2025-04-19T14:20:00',
+//     avatar: 'src/assets/images/Taladro.webp'
+//   }
+// ];
 
-// Usuario actual (simulación de sesión)
-export const usuarioActual: Usuario = usuarios[0]; // Admin principal
+// export const usuarios: Usuario[] = [];
+
+export const obtenerUsuarios = async (): Promise<Usuario[]> => {
+	const usuariosCollection = collection(dbFirestore, 'usuarios');
+	const usuariosSnapshot = await getDocs(usuariosCollection);
+
+	const usuariosList: Usuario[] = [];
+	usuariosSnapshot.forEach((doc) => {
+		const usuarioData = doc.data() as Usuario;
+		usuariosList.push({
+			id: doc.id,
+			uid: usuarioData.uid,
+			nombre: usuarioData.nombre,
+			email: usuarioData.email,
+			rol: usuarioData.rol,
+			estado: usuarioData.estado,
+			fechaCreacion: usuarioData.fechaCreacion,
+			ultimaModificacion: usuarioData.ultimaModificacion,
+			ultimoAcceso: usuarioData.ultimoAcceso,
+			avatar: usuarioData.avatar || 'src/assets/images/Taladro.webp'
+		});
+	})
+
+	return usuariosList;
+}
+
+export const obtenerUsuarioPorId = async (id: string): Promise<Usuario | null> => {
+  const usuarioDoc = doc(dbFirestore, 'usuarios', id);
+  const usuarioSnapshot = await getDoc(usuarioDoc);
+  
+  if (usuarioSnapshot.exists()) {
+    const usuarioData = usuarioSnapshot.data() as Usuario;
+	return usuarioData
+  }
+  return null;
+}
+
+export const agregarUsuario = async(usuario: UsuarioFirebase) => {
+	const usuariosCollection = collection(dbFirestore, 'usuarios');
+	await addDoc(usuariosCollection, {
+		uid: usuario.uid,
+		nombre: usuario.nombre,
+		email: usuario.email,
+		rol: usuario.rol,
+		estado: usuario.estado,
+		fechaCreacion: usuario.fechaCreacion,
+		ultimaModificacion: usuario.ultimaModificacion,
+		ultimoAcceso: usuario.ultimoAcceso,
+		avatar: usuario.avatar || 'src/assets/images/Taladro.webp'
+	});
+}
+
+export const eliminarUsuario = async(id: string) => {
+	const usuarioDoc = doc(dbFirestore, 'usuarios', id);
+	await deleteDoc(usuarioDoc);
+}
