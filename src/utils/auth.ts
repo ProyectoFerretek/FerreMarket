@@ -47,7 +47,7 @@ export const puedeRealizarAccion = (accion: 'crear' | 'editar' | 'eliminar' | 'v
 };
 
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { authFirebase } from '../lib/firebase/Firebase';
+import { authFirebase } from '../lib/Firebase/Firebase';
 
 export const registrarCuenta = async (email: string, password: string) => {
   console.log('Intentando registrar usuario con email:', email, ' y password:', password);

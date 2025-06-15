@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuth0 } from "@auth0/auth0-react";
 import {
   LayoutDashboard,
   Package,
@@ -27,6 +28,7 @@ interface MenuItem {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
   const location = useLocation();
+  const { logout } = useAuth0();
 
   const menuItems: MenuItem[] = [
     {
@@ -146,19 +148,35 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
           <ul className="space-y-1">
             {bottomMenuItems.map((item, index) => (
               <li key={index}>
-                <Link
-                  to={item.path}
-                  onClick={onLinkClick}
-                  className={`
+                {item.title === 'Cerrar Sesión' ? (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      logout({ logoutParams: { returnTo: window.location.origin } })
+                    }}
+                    className={`
+                      w-full flex items-center px-3 py-2.5 text-sm rounded-lg transition-colors group
+                      text-blue-100 hover:bg-red-600 hover:text-white
+                    `}
+                  >
+                    <span className="mr-3 flex-shrink-0">{item.icon}</span>
+                    <span className="truncate">{item.title}</span>
+                  </button>
+                ) : (
+                  <Link
+                    to={item.path}
+                    onClick={onLinkClick}
+                    className={`
                       flex items-center px-3 py-2.5 text-sm rounded-lg transition-colors group
                       ${isActive(item.path)
                       ? 'bg-orange-500 text-white shadow-md'
                       : 'text-blue-100 hover:bg-amber-700 hover:text-white'}
                     `}
-                >
-                  <span className="mr-3 flex-shrink-0">{item.icon}</span>
-                  <span className="truncate">{item.title}</span>
-                </Link>
+                  >
+                    <span className="mr-3 flex-shrink-0">{item.icon}</span>
+                    <span className="truncate">{item.title}</span>
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
