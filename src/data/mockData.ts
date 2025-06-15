@@ -9,7 +9,7 @@ import {
     UsuarioFirebase,
 } from "../types";
 
-import { dbFirestore } from "../lib/Firebase/Firebase";
+import { dbFirestore } from "../lib/firebase/Firebase";
 import {
     collection,
     addDoc,
