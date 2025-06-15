@@ -43,9 +43,9 @@ export const getNombreCliente = (clienteId: string, clientes: any[]): string => 
 /**
  * Calcula el stock total de productos
  */
-export const calcularStockTotal = (productos: any[]): number => {
-  return productos.reduce((total, producto) => total + producto.stock, 0);
-};
+// export const calcularStockTotal = (productos: any[]): number => {
+//   return productos.reduce((total, producto) => total + producto.stock, 0);
+// };
 
 /**
  * Calcula el valor total del inventario
