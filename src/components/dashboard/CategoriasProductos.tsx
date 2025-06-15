@@ -1,10 +1,26 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { categorias } from '../../data/mockData';
+import { calcularProductosPorCategoria, categorias } from '../../data/mockData';
 import { PenTool as Tool, Paintbrush, Zap, Droplets, Box, Flower } from 'lucide-react';
 
 const CategoriasProductos: React.FC = () => {
   const navigate = useNavigate();
+  const [productosPorCategoria, setProductosPorCategoria] = useState<Record<string, number>>({});
+  
+  useEffect(() => {
+    const cargarProductos = async () => {
+      const resultados: Record<string, number> = {};
+      
+      for (const categoria of categorias) {
+        const cantidad = await calcularProductosPorCategoria(categoria.id);
+        resultados[categoria.id] = cantidad || 0;
+      }
+      
+      setProductosPorCategoria(resultados);
+    };
+    
+    cargarProductos();
+  }, []);
 
   // Mapeo de iconos por ID de categoría
   const getIcono = (iconoNombre: string) => {
@@ -63,9 +79,11 @@ const CategoriasProductos: React.FC = () => {
               <h4 className="text-xs sm:text-sm font-medium text-gray-800 leading-tight px-1 line-clamp-2">
                 {categoria.nombre}
               </h4>
-              <p className="text-xs text-gray-500 font-normal whitespace-nowrap">
-                {categoria.cantidad} productos
-              </p>
+                <p className="text-xs text-gray-500 font-normal whitespace-nowrap">
+                {productosPorCategoria[categoria.id] !== undefined 
+                  ? `${productosPorCategoria[categoria.id]} producto${productosPorCategoria[categoria.id] === 1 ? '' : 's'}`
+                  : '... productos'}
+                </p>
             </div>
           </button>
         ))}

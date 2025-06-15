@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { ShoppingCart, DollarSign, Package, Users, Library } from 'lucide-react';
-import { formatPrecio, calcularStockTotal, calcularValorInventario } from '../utils/formatters';
-import { productos, ventas, estadisticasVentas, clientes } from '../data/mockData';
+import { formatPrecio } from '../utils/formatters';
+import { productos, ventas, estadisticasVentas, clientes, calcularValorInventario, calcularStockTotal } from '../data/mockData';
 
 import EstadisticaCard from '../components/dashboard/EstadisticaCard';
 import GraficoVentas from '../components/dashboard/GraficoVentas';
@@ -10,11 +10,30 @@ import VentasRecientes from '../components/dashboard/VentasRecientes';
 import CategoriasProductos from '../components/dashboard/CategoriasProductos';
 
 const Dashboard: React.FC = () => {
+  // Estado para valor del inventario
+  const [valorInventario, setValorInventario] = useState<number>(0);
+  const [stockInventario, setStockInventario] = useState<number>(0);
+  
   // Calcular totales
   const totalVentas = ventas.reduce((total, venta) => total + venta.total, 0);
-  const totalProductos = calcularStockTotal(productos);
-  const valorInventario = calcularValorInventario(productos);
+  // const totalProductos = calcularStockTotal(productos);
   const totalClientes = clientes.length;
+  
+  // Cargar el valor del inventario de manera asíncrona
+  useEffect(() => {
+    const cargarValorInventario = async () => {
+      const valor = await calcularValorInventario();
+      setValorInventario(valor);
+    };
+
+    const cargarStockTotal = async () => {
+      const totalProductos = await calcularStockTotal();
+      setStockInventario(totalProductos);
+    }
+    
+    cargarValorInventario();
+    cargarStockTotal();
+  }, []);
 
   // Calcular incremento de ventas (comparando el último día con el penúltimo)
   const ultimoDia = estadisticasVentas[estadisticasVentas.length - 1].ventas;
@@ -53,7 +72,7 @@ const Dashboard: React.FC = () => {
 
         <EstadisticaCard
           titulo="Total de Productos"
-          valor={totalProductos}
+          valor={stockInventario}
           icono={<Package size={20} className="text-white" />}
           colorClase="bg-orange-500 text-white"
         />
