@@ -10,16 +10,51 @@ export interface Producto {
   destacado: boolean;
 }
 
+export interface UpdateProducto {
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  categoria: string;
+  stock: number;
+  destacado: boolean;
+}
+
 export interface Cliente {
   id: string;
+  tipo: 'individual' | 'empresarial';
+  datos: ClienteIndividual | ClienteEmpresarial;
+  estado: 'activo' | 'inactivo';
+  fechaCreacion: string;
+  ultimaModificacion: string;
+  notas?: string;
+  compras?: number;
+  ultimaCompra?: string;
+  tipoCliente: string;
+}
+
+export interface ClienteIndividual {
   nombre: string;
+  apellidos?: string;
   email: string;
   telefono: string;
-  direccion: string;
-  compras: number;
-  ultimaCompra: string;
-  tipoCliente?: 'individual' | 'empresa';
-  identificacion?: string;
+  direccion?: string;
+  run: string;
+  estado: 'activo' | 'inactivo';
+  notas?: string;
+  ultimaCompra?: string;
+}
+
+export interface ClienteEmpresarial {
+  razonSocial: string; // NOMBRE LEGAL DE LA EMPRESA
+  nombreComercial?: string; // NOMBRE COMERCIAL DE LA EMPRESA
+  email: string;
+  telefono: string;
+  direccion?: string;
+  rut?: string;
+  giro?: string;
+  estado: 'activo' | 'inactivo';
+  notas?: string;
+  ultimaCompra?: string;
 }
 
 export interface Venta {
