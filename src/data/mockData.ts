@@ -10,6 +10,7 @@ import {
     UpdateProducto,
     ClienteEmpresarial,
     ClienteIndividual,
+    VentaFormulario,
 } from "../types";
 
 // import { dbFirestore } from "../lib/firebase/Firebase";
@@ -519,7 +520,6 @@ export const obtenerProductos = async (): Promise<Producto[]> => {
 // CLIENTES
 
 export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIndividual | ClienteEmpresarial) => {
-    const tableName = tipoCliente === "empresa" ? "clientes_empresariales" : "clientes_individuales";
     let userData: any = {};
 
     if (tipoCliente === "individual") {
@@ -532,11 +532,12 @@ export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIn
             run: (dataCliente as ClienteIndividual).run,
             estado: "activo",
             notas: (dataCliente as ClienteIndividual).notas || "",
+            tipo: "individual",
         };
     } else if (tipoCliente === "empresa") {
         userData = {
             razonsocial: (dataCliente as ClienteEmpresarial).razonSocial,
-            nombrecomercial: (dataCliente as ClienteEmpresarial).nombreComercial || "",
+            nombre: (dataCliente as ClienteEmpresarial).nombreComercial || "",
             email: dataCliente.email,
             telefono: dataCliente.telefono,
             direccion: (dataCliente as ClienteEmpresarial).direccion || "",
@@ -544,12 +545,13 @@ export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIn
             giro: (dataCliente as ClienteEmpresarial).giro || "",
             estado: "activo",
             notas: (dataCliente as ClienteEmpresarial).notas || "",
+            tipo: "empresarial",
         };
     }
 
     try {
         const { data: cliente, error } = await supabase
-        .from(tableName)
+        .from("clientes")
         .insert([userData])
 
         if (error) {
@@ -571,57 +573,49 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
 
     try {
         // Obtener clientes individuales
-        const { data: clientesIndividuales } = await supabase
-        .from("clientes_individuales")
+        const { data: clientes } = await supabase
+        .from("clientes")
         .select("*")
 
-        // Obtener clientes empresariales
-        const { data: clientesEmpresariales } = await supabase
-        .from("clientes_empresariales")
-        .select("*")
-
-        // Procesar clientes individuales
-        if (clientesIndividuales) {
-            for (const cliente of clientesIndividuales) {
-                clientesList.push({
-                    id: cliente.id,
-                    nombre: cliente.nombre + (cliente.apellidos ? ` ${cliente.apellidos}` : ""),
-                    email: cliente.email,
-                    telefono: cliente.telefono,
-                    direccion: cliente.direccion || "",
-                    estado: cliente.estado || "activo",
-                    notas: cliente.notas || "",
-                    compras: 0, // No se maneja en clientes individuales
-                    ultimaCompra: cliente.ultimaCompra, // No se maneja en clientes individuales
-                    tipoCliente: "individual",
-                    fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
-                    ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
-                });
+        if (clientes) {
+            for (const cliente of clientes) {
+                if (cliente.tipo === "individual") {
+                    clientesList.push({
+                        id: cliente.id,
+                        nombre: cliente.nombre + (cliente.apellidos ? ` ${cliente.apellidos}` : ""),
+                        email: cliente.email,
+                        telefono: cliente.telefono,
+                        direccion: cliente.direccion || "",
+                        run: cliente.run || "",
+                        estado: cliente.estado || "activo",
+                        notas: cliente.notas || "",
+                        compras: await obtenerTotalComprasClientePorId(cliente.id),
+                        ultimaCompra: cliente.ultimacompra || "Sin fecha registrada.",
+                        tipoCliente: "individual",
+                        fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
+                        ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                    });
+                } else if (cliente.tipo === "empresarial") {
+                    clientesList.push({
+                        id: cliente.id,
+                        nombre: cliente.razonsocial,
+                        email: cliente.email,
+                        telefono: cliente.telefono,
+                        direccion: cliente.direccion || "",
+                        rut: cliente.rut || "",
+                        giro: cliente.giro || "",
+                        estado: cliente.estado || "activo",
+                        notas: cliente.notas || "",
+                        compras: await obtenerTotalComprasClientePorId(cliente.id),
+                        ultimaCompra: cliente.ultimacompra || 'Sin fecha registrada.',
+                        tipoCliente: "empresa",
+                        fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
+                        ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                    });
+                }
             }
         }
 
-        // Procesar clientes empresariales
-        if (clientesEmpresariales) {
-            for (const cliente of clientesEmpresariales) {
-                clientesList.push({
-                    id: cliente.id,
-                    nombre: cliente.razonsocial,
-                    email: cliente.email,
-                    telefono: cliente.telefono,
-                    direccion: cliente.direccion || "",
-                    rut: cliente.rut || "",
-                    giro: cliente.giro || "",
-                    estado: cliente.estado || "activo",
-                    notas: cliente.notas || "",
-                    compras: 0, // No se maneja en clientes empresariales
-                    ultimaCompra: "", // No se maneja en clientes empresariales
-                    tipoCliente: "empresa",
-                    fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
-                    ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
-                });
-            }
-        }
-        
         console.log("Clientes obtenidos correctamente:", clientesList);        
         return clientesList;
     } catch (error) {
@@ -630,13 +624,59 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
     }
 }
 
-export const actualizarCliente = async (id: string, cliente: Cliente) => {}
+// Add a new function to update an existing client
+export const actualizarCliente = async (clienteId: string, clienteData: any) => {
+    let userData: any = {};
 
-export const eliminarCliente = async (tipoCliente: string, clientId: string) => {
-    const tableName = tipoCliente === "empresa" ? "clientes_empresariales" : "clientes_individuales";
+    if (clienteData.tipoCliente === "individual") {
+        userData = {
+            nombre: clienteData.nombre,
+            apellidos: (clienteData as ClienteIndividual).apellidos || "",
+            email: clienteData.email,
+            telefono: clienteData.telefono,
+            direccion: (clienteData as ClienteIndividual).direccion || "",
+            run: (clienteData as ClienteIndividual).run,
+            estado: "activo",
+            notas: (clienteData as ClienteIndividual).notas || "",
+            tipo: "individual",
+        };
+    } else if (clienteData.tipoCliente === "empresa") {
+        userData = {
+            razonsocial: (clienteData as ClienteEmpresarial).razonSocial,
+            nombre: (clienteData as ClienteEmpresarial).nombreComercial || "",
+            email: clienteData.email,
+            telefono: clienteData.telefono,
+            direccion: (clienteData as ClienteEmpresarial).direccion || "",
+            rut: (clienteData as ClienteEmpresarial).rut || "",
+            giro: (clienteData as ClienteEmpresarial).giro || "",
+            estado: "activo",
+            notas: (clienteData as ClienteEmpresarial).notas || "",
+            tipo: "empresarial",
+        };
+    }
 
+    try {
+        const { error } = await supabase
+        .from("clientes")
+        .update(userData)
+        .eq("id", Number(clienteId));
+
+        if (error) {
+            console.error("Error al actualizar cliente:", error);
+            throw new Error(`Error al actualizar cliente: ${error.message}`);
+        }
+
+        console.log("¡Cliente actualizado correctamente!");
+        return true;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+};
+
+export const eliminarCliente = async (clientId: string) => {
     const { error } = await supabase
-    .from(tableName)
+    .from("clientes")
     .delete()
     .eq("id", Number(clientId));
 
@@ -653,7 +693,7 @@ export const obtenerClientesRegistrados = async () => {
     var totalClientes = 0;
 
     const { data: clientes, error } = await supabase
-    .from("clientes_individuales")
+    .from("clientes")
     .select("id");
 
     if (error) {
@@ -663,21 +703,171 @@ export const obtenerClientesRegistrados = async () => {
 
     totalClientes += clientes ? clientes.length : 0;
 
-    const { data: clientesEmpresariales, error: errorEmpresariales } = await supabase
-    .from("clientes_empresariales")
-    .select("id");
-
-    if (errorEmpresariales) {
-        console.error("Error al obtener clientes empresariales:", errorEmpresariales);
-        throw new Error(`Error al obtener clientes empresariales: ${errorEmpresariales.message}`);
-    }
-
-    totalClientes += clientesEmpresariales ? clientesEmpresariales.length : 0;
-
     console.log("Total de clientes registrados:", totalClientes);
     return totalClientes;
 }
 
+export const obtenerTotalComprasClientePorId = async (clienteId: string | number): Promise<number> => {
+    console.log(`Calculando total de compras para el cliente con ID: ${clienteId}`);
+
+    if (clienteId === undefined || clienteId === null || 
+        (typeof clienteId === 'string' && clienteId.trim() === '')) {
+        throw new Error('clienteId must be a non-empty value');
+    }
+
+    const { data: ventas, error } = await supabase
+    .from("ventas")
+    .select("total")
+    .eq("cliente", Number(clienteId));
+
+    if (error) {
+        console.error(`Error fetching purchases for client ${clienteId}:`, error);
+        throw new Error(`Error fetching purchases for client: ${error.message}`);
+    }
+
+    const totalCompras = ventas.length
+    console.log(`Total purchases for client ${clienteId}:`, totalCompras);
+    
+    return totalCompras;
+}
+
+// VENTAS
+
+export const agregarVenta = async (venta: VentaFormulario) => {
+    // AGREGAR DATOS INICIALES DE LA VENTA A LA BASE DE DATOS
+    const ventaData = {
+        fecha: new Date().toISOString(),
+        cliente: venta.cliente,
+        total: venta.total,
+        metodo_pago: venta.metodoPago,
+        estado: venta.estado || "pendiente", // Asignar estado por defecto si no se proporciona
+    }
+
+    console.log("Datos de la venta a agregar:", ventaData);
+
+    const { data, error } = await supabase
+    .from("ventas")
+    .insert([ventaData])
+    .select();
+
+    if (error) {
+        console.error("Error al agregar venta:", error);
+        throw new Error(`Error al agregar venta: ${error.message}`);
+    }
+
+    const ventaId = data?.[0]?.id;
+
+    // AGREGAR PRODUCTOS A LA VENTA
+    for (const producto of venta.productos) {
+        const productoData = {
+            venta_id: ventaId, // Usar el ID obtenido de la respuesta
+            producto_id: producto.id,
+            cantidad: producto.cantidad,
+            precio_unitario: producto.precioUnitario,
+        };
+
+        console.log("Datos del producto a agregar a la venta:", productoData);
+
+        const { error: productoError } = await supabase
+        .from("ventas_productos")
+        .insert([productoData]);
+
+        if (productoError) {
+            console.error("Error al agregar producto a la venta:", productoError);
+            throw new Error(`Error al agregar producto a la venta: ${productoError.message}`);
+        }
+    }
+
+    // ACTUALIZAR STOCK DE LOS PRODUCTOS VENDIDOS
+    for (const producto of venta.productos) {
+        // Primero obtener el producto actual
+        const { data: currentProduct, error: fetchError } = await supabase
+            .from("productos")
+            .select("stock")
+            .eq("id", producto.id)
+            .single();
+        
+        if (fetchError) {
+            console.error("Error al obtener stock del producto:", fetchError);
+            throw new Error(`Error al obtener stock del producto: ${fetchError.message}`);
+        }
+        
+        // Luego actualizar con el nuevo stock
+        const newStock = (currentProduct?.stock || 0) - producto.cantidad;
+        const { error: stockError } = await supabase
+            .from("productos")
+            .update({ stock: newStock })
+            .eq("id", producto.id);
+
+        if (stockError) {
+            console.error("Error al actualizar stock del producto:", stockError);
+            throw new Error(`Error al actualizar stock del producto: ${stockError.message}`);
+        }
+    }
+
+    // ACTUALIZAR FECHA DE ULTIMA COMPRA DEL CLIENTE
+
+    const { error: updateClienteError } = await supabase
+    .from("clientes")
+    .update({ ultimacompra: new Date().toISOString() })
+    .eq("id", venta.cliente);
+
+    if (updateClienteError) {
+        console.error("Error al actualizar la última compra del cliente:", updateClienteError);
+        throw new Error(`Error al actualizar la última compra del cliente: ${updateClienteError.message}`);
+    }
+
+    console.log("¡Venta agregada correctamente!", ventaData);
+    return true; 
+}
+
+export const obtenerVentas = async (): Promise<Venta[]> => {
+    const ventasList: Venta[] = [];
+
+    try {
+        const { data: ventas, error } = await supabase
+        .from("ventas")
+        .select("*");
+
+        if (error) {
+            console.error("Error al obtener ventas:", error);
+            throw new Error(`Error al obtener ventas: ${error.message}`);
+        }
+
+        const { data: productosVentas, error: productosError } = await supabase
+        .from("ventas_productos")
+        .select("*");
+
+        if (productosError) {
+            console.error("Error al obtener productos de ventas:", productosError);
+            throw new Error(`Error al obtener productos de ventas: ${productosError.message}`);
+        }
+
+        // Mapear las ventas y sus productos
+        for (const venta of ventas) {
+            const productos = productosVentas.filter(p => p.venta_id === venta.id).map(p => ({
+                id: p.producto_id,
+                cantidad: p.cantidad,
+                precioUnitario: p.precio_unitario,
+            }));
+
+            ventasList.push({
+                id: venta.id,
+                fecha: venta.fecha,
+                cliente: venta.cliente,
+                productos: productos, // Los productos se obtienen aquí
+                total: venta.total,
+                metodoPago: venta.metodo_pago,
+                estado: venta.estado,
+            });
+        }
+
+        return ventasList;
+    } catch (error) {
+        console.error("Error al obtener ventas:", error);
+        throw new Error(`Error al obtener ventas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
 
 // USUARIOS
 
