@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { agregarUsuario, eliminarUsuario, obtenerUsuarios } from "../data/mockData";
 import { formatFecha } from "../utils/formatters";
-import { puedeGestionarUsuarios, puedeRealizarAccion, registrarCuenta } from "../utils/auth";
+import { puedeGestionarUsuarios, puedeRealizarAccion } from "../utils/auth";
 import UsuarioModal from "../components/modals/UsuarioModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import type { Usuario, UsuarioFormData } from "../types";
