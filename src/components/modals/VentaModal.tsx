@@ -4,7 +4,7 @@ import {
   User, CreditCard, FileText, Calendar, Package, Search,
   CheckCircle, Clock, XCircle, DollarSign, Tag, Save, Building2, Mail, Phone, MapPin, ShoppingBag
 } from 'lucide-react';
-import { productos, obtenerClientes, obtenerProductos } from '../../data/mockData';
+import { obtenerClientes, obtenerProductos, agregarVenta } from '../../data/mockData';
 import { formatPrecio } from '../../utils/formatters';
 import { Cliente, Producto } from '../../types';
 
@@ -198,6 +198,9 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Add debugging to see the actual state value before submission
+    console.log("Estado al guardar:", formData.estado);
+    
     if (!validarFormulario()) {
       return;
     }
@@ -209,16 +212,22 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const ventaData = {
-        ...formData,
+        fecha: formData.fechaVenta,
+        cliente: formData.cliente,
         total: calcularTotal(),
-        subtotal: calcularSubtotal(),
-        descuentoTotal: calcularDescuentoGeneral(),
-        impuestosTotal: calcularImpuestos(),
-        fecha: venta ? venta.fecha : new Date().toISOString(),
-        id: venta ? venta.id : `V${Date.now()}`
-      };
-      
-      console.log('Guardando venta:', ventaData);
+        metodoPago: formData.metodoPago,
+        estado: formData.estado,
+        productos: formData.productos.map(p => ({
+          id: p.id,
+          cantidad: p.cantidad,
+          precioUnitario: p.precioUnitario,
+          descuento: p.descuento
+        })),
+      }
+
+      console.log('Datos de la venta a guardar:', ventaData);
+      await agregarVenta(ventaData);
+
       onClose();
     } catch (error) {
       setErrors({ general: 'Error al guardar la venta. Inténtalo de nuevo.' });
@@ -449,7 +458,10 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                     </label>
                     <select
                       value={formData.estado}
-                      onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, estado: e.target.value }))
+                        console.log("Estado seleccionado:", e.target.value);
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="pendiente">Pendiente</option>
@@ -816,20 +828,6 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
               Cancelar
             </button>
             
-            {!venta && (
-              <button
-                onClick={(e) => {
-                  setFormData(prev => ({ ...prev, estado: 'pendiente' }));
-                  handleSubmit(e);
-                }}
-                disabled={isLoading}
-                className="w-full sm:w-auto px-6 py-3 border border-yellow-300 rounded-lg shadow-sm text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors flex items-center justify-center"
-              >
-                <Clock size={16} className="mr-2" />
-                Guardar como Pendiente
-              </button>
-            )}
-            
             <button
               onClick={handleSubmit}
               disabled={isLoading}
@@ -841,10 +839,7 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                   Guardando...
                 </>
               ) : (
-                <>
-                  <Save size={16} className="mr-2" />
-                  {venta ? 'Guardar Cambios' : 'Crear Venta'}
-                </>
+                <><Save size={16} className="mr-2" />Crear Venta</>
               )}
             </button>
           </div>

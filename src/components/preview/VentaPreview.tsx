@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Calendar, User, CreditCard, Package, Clock } from 'lucide-react';
-import { formatPrecio, formatFecha, getNombreCliente, getEstadoVenta } from '../../utils/formatters';
-import { clientes, productos } from '../../data/mockData';
+import { formatPrecio, formatFecha, getEstadoVenta } from '../../utils/formatters';
+import { obtenerClientes, obtenerProductos } from '../../data/mockData';
+import { Cliente, Producto } from '../../types';
 
 interface VentaPreviewProps {
     venta: any;
@@ -9,7 +10,24 @@ interface VentaPreviewProps {
 }
 
 const VentaPreview: React.FC<VentaPreviewProps> = ({ venta, onClose }) => {
-    const cliente = clientes.find(c => c.id === venta.cliente);
+    const [clientes, setClientes] = useState<Cliente[]>([]);
+    const cargarClientes = async () => {
+        const clientesData = await obtenerClientes();
+        setClientes(clientesData);
+    }
+
+    const [productos, setProductos] = useState<Producto[]>([]);
+    const cargarProductos = async () => {
+        const productosData = await obtenerProductos();
+        setProductos(productosData);
+    }   
+
+    useEffect(() => {
+        cargarClientes();
+        cargarProductos();
+    }, []);
+
+    const cliente = clientes.find(c => Number(c.id) === Number(venta.cliente));
     const estadoInfo = getEstadoVenta(venta.estado);
 
     return (
@@ -174,7 +192,7 @@ const VentaPreview: React.FC<VentaPreviewProps> = ({ venta, onClose }) => {
                 <div className="bg-gray-50 px-6 py-4 rounded-b-lg">
                     <button
                         onClick={onClose}
-                        className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="w-full px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 transition-colors"
                     >
                         Cerrar
                     </button>
