@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, User, Building2, Mail, Phone, MapPin, FileText, Globe, MessageSquare, StickyNote, CheckCircle } from 'lucide-react';
+import { agregarCliente } from '../../data/mockData';
+import { ClienteFormulario } from '../../types';
 
 interface ClienteModalProps {
   cliente?: any;
@@ -14,24 +16,18 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
     email: '',
     telefono: '',
     direccion: '',
-    estado: 'activo',
+    estado: 'activo' as 'activo' | 'inactivo',
     notas: '',
     
     // Campos específicos individual
     apellidos: '',
-    dni: '',
-    fechaNacimiento: '',
+    run: '', // ROL UNICO NACIONAL (RUT)
     
     // Campos específicos empresa
     razonSocial: '',
-    ruc: '',
+    rut: '', // ROL UNICO TRIBUTARIO (RUC)
     nombreComercial: '',
     giro: '',
-    representanteLegal: '',
-    cargoRepresentante: '',
-    sitioWeb: '',
-    redesSociales: '',
-    contactosAdicionales: ''
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -58,19 +54,13 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
         
         // Individual
         apellidos: cliente.apellidos || '',
-        dni: cliente.dni || cliente.identificacion || '',
-        fechaNacimiento: cliente.fechaNacimiento || '',
+        run: cliente.run || cliente.identificacion || '',
         
         // Empresa
         razonSocial: cliente.razonSocial || '',
-        ruc: cliente.ruc || cliente.identificacion || '',
+        rut: cliente.rut || cliente.identificacion || '',
         nombreComercial: cliente.nombreComercial || '',
         giro: cliente.giro || '',
-        representanteLegal: cliente.representanteLegal || '',
-        cargoRepresentante: cliente.cargoRepresentante || '',
-        sitioWeb: cliente.sitioWeb || '',
-        redesSociales: cliente.redesSociales || '',
-        contactosAdicionales: cliente.contactosAdicionales || ''
       });
     }
   }, [cliente]);
@@ -96,11 +86,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
         nuevosErrores.telefono = 'Formato de teléfono inválido';
       }
     }
-
-    if (!formData.direccion.trim()) {
-      nuevosErrores.direccion = 'La dirección es obligatoria';
-    }
-
     // Validaciones específicas por tipo
     if (tipoCliente === 'individual') {
       if (!formData.nombre.trim()) {
@@ -111,38 +96,26 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
         nuevosErrores.apellidos = 'Los apellidos son obligatorios';
       }
 
-      if (!formData.dni.trim()) {
-        nuevosErrores.dni = 'El DNI es obligatorio';
+      if (!formData.run.trim()) {
+        nuevosErrores.run = 'El RUN es obligatorio';
       } else {
-        const dniRegex = /^\d{8}$/;
-        if (!dniRegex.test(formData.dni)) {
-          nuevosErrores.dni = 'El DNI debe tener 8 dígitos';
+        const runRegex = /^\d{7,8}-[\dkK]$/;
+        if (!runRegex.test(formData.run)) {
+          nuevosErrores.run = 'El RUN debe tener entre 7 y 8 dígitos seguido de un guion y un dígito verificador (puede ser K)';
         }
       }
+
     } else {
       if (!formData.razonSocial.trim()) {
         nuevosErrores.razonSocial = 'La razón social es obligatoria';
       }
 
-      if (!formData.ruc.trim()) {
-        nuevosErrores.ruc = 'El RUC es obligatorio';
+      if (!formData.rut.trim()) {
+        nuevosErrores.rut = 'El RUT es obligatorio';
       } else {
-        const rucRegex = /^\d{11}$/;
-        if (!rucRegex.test(formData.ruc)) {
-          nuevosErrores.ruc = 'El RUC debe tener 11 dígitos';
-        }
-      }
-
-      if (!formData.representanteLegal.trim()) {
-        nuevosErrores.representanteLegal = 'El representante legal es obligatorio';
-      }
-
-      // Validar sitio web si se proporciona
-      if (formData.sitioWeb.trim()) {
-        try {
-          new URL(formData.sitioWeb);
-        } catch {
-          nuevosErrores.sitioWeb = 'URL inválida';
+        const rutRegex = /^\d{11}$/;
+        if (!rutRegex.test(formData.rut)) {
+          nuevosErrores.rut = 'El RUT debe tener 11 dígitos';
         }
       }
     }
@@ -164,13 +137,35 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
       // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const clienteData = {
-        ...formData,
-        tipoCliente,
-        identificacion: tipoCliente === 'individual' ? formData.dni : formData.ruc
-      };
+      // const clienteData = {
+      //   ...formData,
+      //   tipoCliente,
+      //   identificacion: tipoCliente === 'individual' ? formData.run : formData.rut
+      // };
       
-      console.log('Guardando cliente:', clienteData);
+      const clientData: ClienteFormulario = {
+        nombre: formData.nombre, 
+        email: formData.email,
+        telefono: formData.telefono,
+        direccion: formData.direccion || 'Sin dirección registrada.',
+        estado: formData.estado as 'activo' | 'inactivo',
+        notas: formData.notas,
+        tipoCliente,
+      }
+
+      if (tipoCliente === 'individual') {
+        clientData['run'] = formData.run;
+        clientData['apellidos'] = formData.apellidos;
+      } else if (tipoCliente === 'empresa') {
+        clientData['razonSocial'] = formData.razonSocial;
+        clientData['rut'] = formData.rut;
+        clientData['nombreComercial'] = formData.nombreComercial || 'Sin nombre comercial';
+        clientData['giro'] = formData.giro || 'Sin giro registrado';
+      }
+
+      console.log('Datos del cliente a guardar:', clientData);
+      await agregarCliente(tipoCliente, clientData);
+
       onClose();
     } catch (error) {
       setErrors({ general: 'Error al guardar el cliente. Inténtalo de nuevo.' });
@@ -189,7 +184,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-2 sm:p-4">
+    <div className="mt-0 fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[100] p-2 sm:p-4">
       <div className="bg-white rounded-xl w-full max-w-4xl h-[95vh] sm:h-[90vh] flex flex-col shadow-2xl">
         {/* Header del Modal */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 bg-gray-50 rounded-t-xl flex-shrink-0">
@@ -316,37 +311,25 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      RUT *
+                      RUN *
                     </label>
                     <input
                       type="text"
-                      value={formData.dni}
-                      onChange={(e) => setFormData(prev => ({ ...prev, dni: e.target.value }))}
+                      value={formData.run}
+                      onChange={(e) => setFormData(prev => ({ ...prev, run: e.target.value }))}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-                        getFieldError('dni') ? 'border-red-300 bg-red-50' : 
-                        isFieldValid('dni') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                        getFieldError('run') ? 'border-red-300 bg-red-50' : 
+                        isFieldValid('run') ? 'border-green-300 bg-green-50' : 'border-gray-300'
                       }`}
-                      placeholder="12345678"
-                      maxLength={8}
+                      placeholder=""
+                      maxLength={10}
                     />
-                    {getFieldError('dni') && (
+                    {getFieldError('run') && (
                       <p className="mt-1 text-sm text-red-600 flex items-center">
                         <AlertCircle size={14} className="mr-1" />
-                        {getFieldError('dni')}
+                        {getFieldError('run')}
                       </p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Fecha de Nacimiento
-                    </label>
-                    <input
-                      type="date"
-                      value={formData.fechaNacimiento}
-                      onChange={(e) => setFormData(prev => ({ ...prev, fechaNacimiento: e.target.value }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
                   </div>
                 </div>
               ) : (
@@ -354,7 +337,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Razón Social *
+                      Razón Social (Nombre Legal) *
                     </label>
                     <input
                       type="text"
@@ -380,19 +363,19 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                     </label>
                     <input
                       type="text"
-                      value={formData.ruc}
-                      onChange={(e) => setFormData(prev => ({ ...prev, ruc: e.target.value }))}
+                      value={formData.rut}
+                      onChange={(e) => setFormData(prev => ({ ...prev, rut: e.target.value }))}
                       className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                        getFieldError('ruc') ? 'border-red-300 bg-red-50' : 
-                        isFieldValid('ruc') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                        getFieldError('rut') ? 'border-red-300 bg-red-50' : 
+                        isFieldValid('rut') ? 'border-green-300 bg-green-50' : 'border-gray-300'
                       }`}
                       placeholder="12345678901"
                       maxLength={11}
                     />
-                    {getFieldError('ruc') && (
+                    {getFieldError('rut') && (
                       <p className="mt-1 text-sm text-red-600 flex items-center">
                         <AlertCircle size={14} className="mr-1" />
-                        {getFieldError('ruc')}
+                        {getFieldError('rut')}
                       </p>
                     )}
                   </div>
@@ -421,28 +404,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="Construcción, Comercio, etc."
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Representante Legal *
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.representanteLegal}
-                      onChange={(e) => setFormData(prev => ({ ...prev, representanteLegal: e.target.value }))}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all ${
-                        getFieldError('representanteLegal') ? 'border-red-300 bg-red-50' : 
-                        isFieldValid('representanteLegal') ? 'border-green-300 bg-green-50' : 'border-gray-300'
-                      }`}
-                      placeholder="Nombre del representante legal"
-                    />
-                    {getFieldError('representanteLegal') && (
-                      <p className="mt-1 text-sm text-red-600 flex items-center">
-                        <AlertCircle size={14} className="mr-1" />
-                        {getFieldError('representanteLegal')}
-                      </p>
-                    )}
                   </div>
                 </div>
               )}
@@ -495,7 +456,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                         getFieldError('telefono') ? 'border-red-300 bg-red-50' : 
                         isFieldValid('telefono') ? 'border-green-300 bg-green-50' : 'border-gray-300'
                       }`}
-                      placeholder="+51 999 999 999"
+                      placeholder="+56"
                     />
                   </div>
                   {getFieldError('telefono') && (
@@ -508,7 +469,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Dirección *
+                    Dirección
                   </label>
                   <div className="relative">
                     <MapPin size={18} className="absolute left-3 top-3 text-gray-400" />
