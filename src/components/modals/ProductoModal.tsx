@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Upload, AlertCircle, Package, Check, Star, DollarSign } from 'lucide-react';
 import { Categoria } from '../../types';
-import { agregarProducto, obtenerProductos } from '../../data/mockData';
+import { actualizarProducto, agregarProducto, obtenerProductos } from '../../data/mockData';
 
 interface ProductoModalProps {
   producto?: any;
@@ -12,6 +12,7 @@ interface ProductoModalProps {
 const ProductoModal: React.FC<ProductoModalProps> = ({ producto, onClose, categorias }) => {
   // Estados del formulario
   const [formData, setFormData] = useState({
+    id : '',
     sku: '',
     nombre: '',
     descripcion: '',
@@ -62,6 +63,7 @@ const ProductoModal: React.FC<ProductoModalProps> = ({ producto, onClose, catego
   useEffect(() => {
     if (producto) {
       const data = {
+        id: producto.id || '',
         sku: producto.sku || generateSKU(),
         nombre: producto.nombre || '',
         descripcion: producto.descripcion || '',
@@ -195,8 +197,8 @@ const ProductoModal: React.FC<ProductoModalProps> = ({ producto, onClose, catego
       return;
     }
 
-    // Validar tamaño (5MB máximo)
-    if (file.size > 5 * 1024 * 1024) {
+    // Validar tamaño (2MB máximo)
+    if (file.size > 2 * 1024 * 1024) {
       setErrors(prev => ({ 
         ...prev, 
         imagen: 'La imagen no puede superar los 2MB' 
@@ -237,33 +239,24 @@ const ProductoModal: React.FC<ProductoModalProps> = ({ producto, onClose, catego
     setIsLoading(true);
 
     try {
-      // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-    //   const productoData = {
-    //     ...formData,
-    //     precio: parseFloat(formData.precio),
-    //     stock: parseInt(formData.stock),
-    //     id: producto?.id || `PROD-${Date.now()}`
-    //   };
-      
-    
-      const NuevoProducto = {
-		 id: producto?.id || `PROD-${Date.now()}`,
-		 sku: formData.sku,
-		 nombre: formData.nombre,
-		 descripcion: formData.descripcion,
-		 precio: parseFloat(formData.precio),
-		 categoria: formData.categoria,
-		 stock: parseInt(formData.stock),
-		 imagen: formData.imagen,
-		 destacado: formData.estado
-	  }
 
-	await agregarProducto(NuevoProducto);
+      const NuevoProducto = {
+        id: producto?.id || `PROD-${Date.now()}`,
+        sku: formData.sku,
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        precio: parseFloat(formData.precio),
+        categoria: formData.categoria,
+        stock: parseInt(formData.stock),
+        imagen: formData.imagen,
+        destacado: formData.estado
+      }
+
+      await agregarProducto(NuevoProducto);
       
-      // Limpiar formulario
       setFormData({
+        id: '',
         sku: generateSKU(),
         nombre: '',
         descripcion: '',
@@ -273,6 +266,57 @@ const ProductoModal: React.FC<ProductoModalProps> = ({ producto, onClose, catego
         imagen: '',
         estado: true
       });
+      
+      setImagenPreview('');
+      setHasChanges(false);
+      
+      onClose();
+    } catch (error) {
+      setErrors({ general: 'Error al guardar el producto. Inténtalo de nuevo.' });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      // Scroll al primer error
+      const firstErrorField = Object.keys(errors)[0];
+      const errorElement = document.querySelector(`[name="${firstErrorField}"]`);
+      errorElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const NuevoProducto = {
+        nombre: formData.nombre,
+        descripcion: formData.descripcion,
+        precio: parseFloat(formData.precio),
+        categoria: formData.categoria,
+        stock: parseInt(formData.stock),
+        destacado: formData.estado
+      }
+
+      await actualizarProducto(formData.id, NuevoProducto);
+      
+      setFormData({
+        id: formData.id,
+        sku: generateSKU(),
+        nombre: '',
+        descripcion: '',
+        precio: '',
+        categoria: '',
+        stock: '',
+        imagen: '',
+        estado: true
+      });
+      
       setImagenPreview('');
       setHasChanges(false);
       
@@ -639,7 +683,7 @@ const ProductoModal: React.FC<ProductoModalProps> = ({ producto, onClose, catego
                 Cancelar
               </button>
               <button
-                onClick={handleSubmit}
+                onClick={producto ? handleUpdate : handleSubmit}
                 disabled={isLoading}
                 className="w-full sm:w-auto px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-medium flex items-center justify-center shadow-lg"
               >
