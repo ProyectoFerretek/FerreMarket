@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingCart, DollarSign, Package, Users, Library } from 'lucide-react';
 import { formatPrecio } from '../utils/formatters';
-import { productos, ventas, estadisticasVentas, clientes, calcularValorInventario, calcularStockTotal } from '../data/mockData';
+import { productos, ventas, estadisticasVentas, clientes, calcularValorInventario, calcularStockTotal, obtenerClientesRegistrados } from '../data/mockData';
 
 import EstadisticaCard from '../components/dashboard/EstadisticaCard';
 import GraficoVentas from '../components/dashboard/GraficoVentas';
@@ -13,11 +13,11 @@ const Dashboard: React.FC = () => {
   // Estado para valor del inventario
   const [valorInventario, setValorInventario] = useState<number>(0);
   const [stockInventario, setStockInventario] = useState<number>(0);
+  const [totalClientes, setTotalClientes] = useState<number>(0);
   
   // Calcular totales
   const totalVentas = ventas.reduce((total, venta) => total + venta.total, 0);
   // const totalProductos = calcularStockTotal(productos);
-  const totalClientes = clientes.length;
   
   // Cargar el valor del inventario de manera asíncrona
   useEffect(() => {
@@ -30,9 +30,15 @@ const Dashboard: React.FC = () => {
       const totalProductos = await calcularStockTotal();
       setStockInventario(totalProductos);
     }
+
+    const cargarClientesRegistrados = async () => {
+      const clientesRegistrados = await obtenerClientesRegistrados();
+      setTotalClientes(clientesRegistrados);
+    }
     
     cargarValorInventario();
     cargarStockTotal();
+    cargarClientesRegistrados();
   }, []);
 
   // Calcular incremento de ventas (comparando el último día con el penúltimo)
@@ -41,7 +47,7 @@ const Dashboard: React.FC = () => {
   const incrementoVentas = Math.round((ultimoDia - penultimoDia) / penultimoDia * 100);
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-4 sm:space-y-6 mt-0">
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
           <Library size={28} className="mr-3 text-blue-600" />
