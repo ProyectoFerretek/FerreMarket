@@ -71,7 +71,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen, isMobile })
 
   return (
     <>
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
         <div className="px-3 sm:px-4 lg:px-6 py-3 sm:py-4 flex items-center justify-between">
           {/* Left Section */}
           <div className="flex items-center min-w-0">
