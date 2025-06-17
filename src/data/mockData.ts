@@ -7,24 +7,29 @@ import {
     Notificacion,
     Usuario,
     UsuarioFirebase,
+    UpdateProducto,
+    ClienteEmpresarial,
+    ClienteIndividual,
 } from "../types";
 
-import { dbFirestore } from "../lib/firebase/Firebase";
-import {
-    collection,
-    addDoc,
-    getDocs,
-    getDoc,
-    doc,
-    setDoc,
-    updateDoc,
-    deleteDoc,
-    onSnapshot,
-    query,
-    where,
-    orderBy,
-	getCountFromServer,
-} from "firebase/firestore";
+// import { dbFirestore } from "../lib/firebase/Firebase";
+// import {
+//     collection,
+//     addDoc,
+//     getDocs,
+//     getDoc,
+//     doc,
+//     setDoc,
+//     updateDoc,
+//     deleteDoc,
+//     onSnapshot,
+//     query,
+//     where,
+//     orderBy,
+// 	getCountFromServer,
+// } from "firebase/firestore";
+
+import supabase from "../lib/supabase/Supabase";
 
 // Categorías de productos
 export const categorias: Categoria[] = [
@@ -340,165 +345,361 @@ export const notificaciones: Notificacion[] = [
 
 export const calcularValorInventario = async () => {
     var totalValor = 0;
-    const productosCollection = collection(dbFirestore, "productos");
-    const productosSnapshot = await getDocs(productosCollection);
-    productosSnapshot.forEach((doc) => {
-        const productoData = doc.data() as Producto;
-        const valorProducto = productoData.precio * (productoData.stock || 0);
+    const { data: productos, error } = await supabase
+    .from("productos")
+    .select("precio, stock");
+
+    if (error) {
+        console.error("Error al obtener productos:", error);
+        throw new Error(`Error al obtener productos: ${error.message}`);
+    }
+
+    for (const producto of productos) {
+        const valorProducto = producto.precio * (producto.stock || 0);
         totalValor += valorProducto;
-    });
+    }
+
+    console.log("Valor total del inventario:", totalValor);
+
     return totalValor;
 };
 
 export const calcularStockTotal = async () => {
     var totalProductos = 0;
-    const productosCollection = collection(dbFirestore, "productos");
-    const productosSnapshot = await getDocs(productosCollection);
-    productosSnapshot.forEach((doc) => {
-        const productoData = doc.data() as Producto;
-        totalProductos += productoData.stock || 0;
-    });
+    const { data: productos, error } = await supabase
+    .from("productos")
+    .select("stock");
+    
+    if (error) {
+        console.error("Error al obtener productos:", error);
+        throw new Error(`Error al obtener productos: ${error.message}`);
+    }
+
+    for (const producto of productos) {
+        totalProductos += producto.stock || 0;
+    }
+
+    console.log("Total de productos en stock:", totalProductos);
+
     return totalProductos;
 };
 
-// export const calcularProductosPorCategoria = async (categoriaId: string) => {
-// 	const productosCollection = collection(dbFirestore, "productos");
-// 	const q = query(productosCollection, where("categoria", "==", categoriaId));
-// 	const productosSnapshot = await getDocs(q);
-	
-// 	return productosSnapshot.size;
-// };
-
 export const calcularProductosPorCategoria = async (categoriaId: string): Promise<number> => {
-	// Input validation
 	if (!categoriaId || typeof categoriaId !== 'string' || categoriaId.trim() === '') {
 		throw new Error('categoriaId must be a non-empty string');
 	}
 
-	try {
-		const productosCollection = collection(dbFirestore, "productos");
-		const q = query(productosCollection, where("categoria", "==", categoriaId.trim()));
-		
-		// Use getCountFromServer for better performance - only gets count, not all documents
-		const snapshot = await getCountFromServer(q);
-		
-		return snapshot.data().count;
-	} catch (error) {
-		console.error(`Error calculating products for category ${categoriaId}:`, error);
-		throw new Error(`Failed to calculate products for category: ${error instanceof Error ? error.message : 'Unknown error'}`);
-	}
+    const { data: productos, error } = await supabase
+    .from("productos")
+    .select("id")
+    .eq("categoria", categoriaId);
+
+    if (error) {
+        console.error(`Error fetching products for category ${categoriaId}:`, error);
+        throw new Error(`Error fetching products for category: ${error.message}`);
+    }
+
+    const cantidadProductos = productos ? productos.length : 0;
+    console.log(`Cantidad de productos en la categoría ${categoriaId}:`, cantidadProductos);
+    
+    return cantidadProductos;
 };
+
+// PRODUCTOS
 
 export const agregarProducto = async (producto: Producto) => {
-    const productosCollection = collection(dbFirestore, "productos");
-    const docRef = await addDoc(productosCollection, {
-        sku: producto.sku,
-        nombre: producto.nombre,
-        descripcion: producto.descripcion,
-        precio: producto.precio,
-        categoria: producto.categoria,
-        stock: producto.stock,
-        imagen: producto.imagen,
-        destacado: producto.destacado,
-    });
+    try {
+        const productImage = base64ToFile(producto.imagen, `${producto.sku}.webp`, 'image/webp');
 
-    console.log("Producto agregado con ID:", docRef.id);
+        await fetch(import.meta.env.VITE_CLOUDFLARE_WORKERS_URL + producto.sku + ".webp", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "image/webp",
+                "x-api-key": import.meta.env.VITE_CLOUDFLARE_WORKERS_API_KEY,
+            },
+
+            body: productImage,
+        })
+
+        const productData = {
+            sku: producto.sku,
+            nombre: producto.nombre,
+            descripcion: producto.descripcion,
+            precio: producto.precio,
+            categoria: producto.categoria,
+            stock: producto.stock,
+            imagen: import.meta.env.VITE_CLOUDFLARE_CDN_URL + producto.sku + ".webp",
+            destacado: producto.destacado || false,
+        };
+
+        const { error } = await supabase
+        .from("productos")
+        .insert([productData]);
+        
+        if (error) {
+            console.error("Error al agregar producto:", error);
+            throw new Error(`Error al agregar producto: ${error.message}`);
+        }
+        
+        console.log("¡Producto agregado correctamente!");
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
 };
 
-export const actualizarProducto = async (id: string, producto: Producto) => {
-    const productoDoc = doc(dbFirestore, "productos", id);
-    await updateDoc(productoDoc, {
+export const actualizarProducto = async (id: string, producto: UpdateProducto) => {
+    const updateData = {
         nombre: producto.nombre,
         descripcion: producto.descripcion,
         precio: producto.precio,
         categoria: producto.categoria,
         stock: producto.stock,
-        imagen: producto.imagen,
-        destacado: producto.destacado,
-    });
+        destacado: producto.destacado || false,
+    }
+
+    const { error } = await supabase
+    .from("productos")
+    .update([updateData])
+    .eq("id", Number(id));
+
+    if (error) {
+        console.error("Error al actualizar producto:", error);
+        throw new Error(`Error al actualizar producto: ${error.message}`);
+    }
+
+    console.log("¡Producto actualizado correctamente!");
 };
 
 export const eliminarProducto = async (id: string) => {
-    const productoDoc = doc(dbFirestore, "productos", id);
-    await deleteDoc(productoDoc);
+    const { error } = await supabase
+    .from("productos")
+    .delete()
+    .eq("id", Number(id));
+
+    if (error) {
+        console.error("Error al eliminar producto:", error);
+        throw new Error(`Error al eliminar producto: ${error.message}`);
+    }
+
+    console.log("¡Producto eliminado correctamente!");
 };
 
 export const obtenerProductos = async (): Promise<Producto[]> => {
-    const productosCollection = collection(dbFirestore, "productos");
-    const productosSnapshot = await getDocs(productosCollection);
     const productosList: Producto[] = [];
 
-    productosSnapshot.forEach((doc) => {
-        const productoData = doc.data() as Producto;
-        productosList.push({
-            id: doc.id,
-            sku: productoData.sku,
-            nombre: productoData.nombre,
-            descripcion: productoData.descripcion,
-            precio: productoData.precio,
-            categoria: productoData.categoria,
-            stock: productoData.stock,
-            imagen: productoData.imagen || "src/assets/images/Taladro.webp",
-            destacado: productoData.destacado || false,
-        });
-    });
+    try {
+        const { data: productos } = await supabase
+            .from("productos")
+            .select("*")
 
-    return productosList;
+        if (productos) {
+            for (const producto of productos) {
+                productosList.push({
+                    id: producto.id,
+                    sku: producto.sku,
+                    nombre: producto.nombre,
+                    descripcion: producto.descripcion,
+                    precio: producto.precio,
+                    categoria: producto.categoria,
+                    stock: producto.stock,
+                    imagen: producto.imagen || "src/assets/images/Taladro.webp",
+                    destacado: producto.destacado || false,
+                } as Producto);
+            }
+        }
+
+        return productosList;
+    } catch (error) {
+        console.error("Error al obtener productos:", error);
+        throw new Error(`Error al obtener productos: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 };
 
+// CLIENTES
+
+export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIndividual | ClienteEmpresarial) => {
+    const tableName = tipoCliente === "empresa" ? "clientes_empresariales" : "clientes_individuales";
+    let userData: any = {};
+
+    if (tipoCliente === "individual") {
+        userData = {
+            nombre: dataCliente.nombre,
+            apellidos: (dataCliente as ClienteIndividual).apellidos || "",
+            email: dataCliente.email,
+            telefono: dataCliente.telefono,
+            direccion: (dataCliente as ClienteIndividual).direccion || "",
+            run: (dataCliente as ClienteIndividual).run,
+            estado: "activo",
+            notas: (dataCliente as ClienteIndividual).notas || "",
+        };
+    } else if (tipoCliente === "empresa") {
+        userData = {
+            razonsocial: (dataCliente as ClienteEmpresarial).razonSocial,
+            nombrecomercial: (dataCliente as ClienteEmpresarial).nombreComercial || "",
+            email: dataCliente.email,
+            telefono: dataCliente.telefono,
+            direccion: (dataCliente as ClienteEmpresarial).direccion || "",
+            rut: (dataCliente as ClienteEmpresarial).rut || "",
+            giro: (dataCliente as ClienteEmpresarial).giro || "",
+            estado: "activo",
+            notas: (dataCliente as ClienteEmpresarial).notas || "",
+        };
+    }
+
+    try {
+        const { data: cliente, error } = await supabase
+        .from(tableName)
+        .insert([userData])
+
+        if (error) {
+            console.error("Error al agregar cliente:", error);
+            throw new Error(`Error al agregar cliente: ${error.message}`);
+        }
+
+        console.log("¡Cliente agregado correctamente!");
+        return cliente;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+}
+
+
+export const obtenerClientes = async (): Promise<Cliente[]> => {
+    const clientesList: Cliente[] = [];
+
+    try {
+        // Obtener clientes individuales
+        const { data: clientesIndividuales } = await supabase
+        .from("clientes_individuales")
+        .select("*")
+
+        // Obtener clientes empresariales
+        const { data: clientesEmpresariales } = await supabase
+        .from("clientes_empresariales")
+        .select("*")
+
+        // Procesar clientes individuales
+        if (clientesIndividuales) {
+            for (const cliente of clientesIndividuales) {
+                clientesList.push({
+                    id: cliente.id,
+                    nombre: cliente.nombre + (cliente.apellidos ? ` ${cliente.apellidos}` : ""),
+                    email: cliente.email,
+                    telefono: cliente.telefono,
+                    direccion: cliente.direccion || "",
+                    estado: cliente.estado || "activo",
+                    notas: cliente.notas || "",
+                    compras: 0, // No se maneja en clientes individuales
+                    ultimaCompra: cliente.ultimaCompra, // No se maneja en clientes individuales
+                    tipoCliente: "individual",
+                    fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
+                    ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                });
+            }
+        }
+
+        // Procesar clientes empresariales
+        if (clientesEmpresariales) {
+            for (const cliente of clientesEmpresariales) {
+                clientesList.push({
+                    id: cliente.id,
+                    nombre: cliente.razonsocial,
+                    email: cliente.email,
+                    telefono: cliente.telefono,
+                    direccion: cliente.direccion || "",
+                    rut: cliente.rut || "",
+                    giro: cliente.giro || "",
+                    estado: cliente.estado || "activo",
+                    notas: cliente.notas || "",
+                    compras: 0, // No se maneja en clientes empresariales
+                    ultimaCompra: "", // No se maneja en clientes empresariales
+                    tipoCliente: "empresa",
+                    fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
+                    ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                });
+            }
+        }
+        
+        console.log("Clientes obtenidos correctamente:", clientesList);        
+        return clientesList;
+    } catch (error) {
+        console.error("Error al obtener clientes:", error);
+        throw new Error(`Error al obtener clientes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+export const actualizarCliente = async (id: string, cliente: Cliente) => {}
+
+export const eliminarCliente = async (tipoCliente: string, clientId: string) => {
+    const tableName = tipoCliente === "empresa" ? "clientes_empresariales" : "clientes_individuales";
+
+    const { error } = await supabase
+    .from(tableName)
+    .delete()
+    .eq("id", Number(clientId));
+
+    if (error) {
+        console.error("Error al eliminar cliente:", error);
+        throw new Error(`Error al eliminar cliente: ${error.message}`);
+    }
+
+    console.log("¡Cliente eliminado correctamente!");
+    return true;
+}
+
+export const obtenerClientesRegistrados = async () => {
+    var totalClientes = 0;
+
+    const { data: clientes, error } = await supabase
+    .from("clientes_individuales")
+    .select("id");
+
+    if (error) {
+        console.error("Error al obtener clientes:", error);
+        throw new Error(`Error al obtener clientes: ${error.message}`);
+    }
+
+    totalClientes += clientes ? clientes.length : 0;
+
+    const { data: clientesEmpresariales, error: errorEmpresariales } = await supabase
+    .from("clientes_empresariales")
+    .select("id");
+
+    if (errorEmpresariales) {
+        console.error("Error al obtener clientes empresariales:", errorEmpresariales);
+        throw new Error(`Error al obtener clientes empresariales: ${errorEmpresariales.message}`);
+    }
+
+    totalClientes += clientesEmpresariales ? clientesEmpresariales.length : 0;
+
+    console.log("Total de clientes registrados:", totalClientes);
+    return totalClientes;
+}
+
+
+// USUARIOS
+
 export const obtenerUsuarios = async (): Promise<Usuario[]> => {
-    const usuariosCollection = collection(dbFirestore, "usuarios");
-    const usuariosSnapshot = await getDocs(usuariosCollection);
-
     const usuariosList: Usuario[] = [];
-    usuariosSnapshot.forEach((doc) => {
-        const usuarioData = doc.data() as Usuario;
-        usuariosList.push({
-            id: doc.id,
-            uid: usuarioData.uid,
-            nombre: usuarioData.nombre,
-            email: usuarioData.email,
-            rol: usuarioData.rol,
-            estado: usuarioData.estado,
-            fechaCreacion: usuarioData.fechaCreacion,
-            ultimaModificacion: usuarioData.ultimaModificacion,
-            ultimoAcceso: usuarioData.ultimoAcceso,
-            avatar: usuarioData.avatar || "src/assets/images/Taladro.webp",
-        });
-    });
-
     return usuariosList;
 };
 
-export const obtenerUsuarioPorId = async (
-    id: string
-): Promise<Usuario | null> => {
-    const usuarioDoc = doc(dbFirestore, "usuarios", id);
-    const usuarioSnapshot = await getDoc(usuarioDoc);
+export const obtenerUsuarioPorId = async (id: string) => {}
 
-    if (usuarioSnapshot.exists()) {
-        const usuarioData = usuarioSnapshot.data() as Usuario;
-        return usuarioData;
-    }
-    return null;
-};
+export const agregarUsuario = async (usuario: UsuarioFirebase) => {};
 
-export const agregarUsuario = async (usuario: UsuarioFirebase) => {
-    const usuariosCollection = collection(dbFirestore, "usuarios");
-    await addDoc(usuariosCollection, {
-        uid: usuario.uid,
-        nombre: usuario.nombre,
-        email: usuario.email,
-        rol: usuario.rol,
-        estado: usuario.estado,
-        fechaCreacion: usuario.fechaCreacion,
-        ultimaModificacion: usuario.ultimaModificacion,
-        ultimoAcceso: usuario.ultimoAcceso,
-        avatar: usuario.avatar || "src/assets/images/Taladro.webp",
-    });
-};
+export const eliminarUsuario = async (id: string) => {};
 
-export const eliminarUsuario = async (id: string) => {
-    const usuarioDoc = doc(dbFirestore, "usuarios", id);
-    await deleteDoc(usuarioDoc);
-};
+function base64ToFile(base64: string, filename: string, mimeType: string): File {
+  const byteString = atob(base64.split(',')[1]);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+
+  for (let i = 0; i < byteString.length; i++) {
+    ia[i] = byteString.charCodeAt(i);
+  }
+
+  return new File([ab], filename, { type: mimeType });
+}
