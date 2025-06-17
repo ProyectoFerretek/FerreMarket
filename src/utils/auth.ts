@@ -45,22 +45,3 @@ export const puedeRealizarAccion = (accion: 'crear' | 'editar' | 'eliminar' | 'v
       return false;
   }
 };
-
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from 'firebase/auth';
-import { authFirebase } from '../lib/firebase/Firebase';
-
-export const registrarCuenta = async (email: string, password: string) => {
-  console.log('Intentando registrar usuario con email:', email, ' y password:', password);
-  return await createUserWithEmailAndPassword(authFirebase, email, password);
-};
-
-export const iniciarSesion = async (email: string, password: string) => {
-  return await signInWithEmailAndPassword(authFirebase, email, password).then((userCredential) => {
-    console.log('Usuario autenticado:', userCredential.user);
-    return userCredential.user;
-  })
-};
-
-export const cerrarSesion = async () => {
-  return await signOut(authFirebase);
-};
