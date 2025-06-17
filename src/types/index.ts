@@ -68,6 +68,19 @@ export interface Venta {
   }[];
   total: number;
   metodoPago: string;
+  estado: string;
+}
+
+export interface VentaFormulario {
+  fecha: string;
+  cliente: string;
+  productos: {
+    id: string;
+    cantidad: number;
+    precioUnitario: number;
+  }[];
+  total: number;
+  metodoPago: string;
   estado: 'completada' | 'pendiente' | 'cancelada';
 }
 
