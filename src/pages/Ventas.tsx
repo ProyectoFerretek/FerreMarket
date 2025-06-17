@@ -348,7 +348,7 @@ const Ventas: React.FC = () => {
             return (
               <div key={metodo} className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-3 bg-blue-500"></div>
+                  <div className="w-3 h-3 rounded-full mr-3 bg-orange-500"></div>
                   <span className="text-sm text-gray-700">{metodo}</span>
                 </div>
                 <div className="text-right">
@@ -515,7 +515,7 @@ const Ventas: React.FC = () => {
           
           <button
             onClick={() => setModalOpen(true)}
-            className="bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center text-sm font-medium transition-colors"
+            className="bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center text-sm font-medium transition-colors"
           >
             <Plus size={16} className="mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Nueva Venta</span>
