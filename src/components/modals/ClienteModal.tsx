@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, AlertCircle, User, Building2, Mail, Phone, MapPin, FileText, Globe, MessageSquare, StickyNote, CheckCircle } from 'lucide-react';
-import { agregarCliente } from '../../data/mockData';
+import { agregarCliente, actualizarCliente } from '../../data/mockData';
 import { ClienteFormulario } from '../../types';
 
 interface ClienteModalProps {
@@ -137,12 +137,6 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
       // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // const clienteData = {
-      //   ...formData,
-      //   tipoCliente,
-      //   identificacion: tipoCliente === 'individual' ? formData.run : formData.rut
-      // };
-      
       const clientData: ClienteFormulario = {
         nombre: formData.nombre, 
         email: formData.email,
@@ -164,7 +158,16 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
       }
 
       console.log('Datos del cliente a guardar:', clientData);
-      await agregarCliente(tipoCliente, clientData);
+      
+      if (cliente) {
+        // EDITAR cliente existente
+        await actualizarCliente(cliente.id, clientData);
+        console.log('Cliente actualizado con ID:', cliente.id);
+      } else {
+        // CREAR nuevo cliente
+        await agregarCliente(tipoCliente, clientData);
+        console.log('Nuevo cliente creado');
+      }
 
       onClose();
     } catch (error) {

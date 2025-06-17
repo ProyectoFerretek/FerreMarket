@@ -885,8 +885,7 @@ const Clientes: React.FC = () => {
           mensaje={`¿Estás seguro de que deseas eliminar al cliente "${clienteSeleccionado?.nombre}"? Esta acción no se puede deshacer.`}
           onConfirm={async () => {
             if (clienteSeleccionado?.id) {
-              await eliminarCliente(clienteSeleccionado.tipoCliente || 'individual', clienteSeleccionado.id).then(() => {
-                // Actualizar la lista de clientes después de eliminar
+              await eliminarCliente(clienteSeleccionado.id).then(() => {
                 cargarClientes()
               })
             }
