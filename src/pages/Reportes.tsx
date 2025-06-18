@@ -9,6 +9,10 @@ import { formatPrecio, formatFecha, calcularStockTotal, calcularValorInventario 
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ReposicionModal from '../components/modals/ReposicionModal';
 import { Producto } from '../types';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
+import logoURL from '../assets/images/logo.png'; // Adjust path to your logo
 
 // Mock data para proveedores
 const proveedores = [
@@ -96,9 +100,153 @@ const ReportesInventario: React.FC = () => {
     setReposicionModalOpen(true);
   };
 
+  // PDF Export functions
+  const generatePDF = () => {
+    // Create a new PDF document
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+
+    // Add logo and header
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    
+    // Add logo (commented out until logo is available)
+    // doc.addImage(logoURL, 'PNG', 10, 10, 30, 15);
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(33, 37, 41);
+    doc.text('FerreMarket - Reporte de Inventario', pageWidth / 2, 20, { align: 'center' });
+    
+    // Add report info
+    doc.setFontSize(12);
+    doc.text(`Reporte de productos ${vistaActual === 'critico' ? 'con stock crítico' : 'sin stock'}`, pageWidth / 2, 30, { align: 'center' });
+    doc.setFontSize(10);
+    const today = new Date().toLocaleDateString('es-ES', { 
+      day: 'numeric', 
+      month: 'long', 
+      year: 'numeric' 
+    });
+    doc.text(`Generado el ${today}`, pageWidth / 2, 35, { align: 'center' });
+    
+    // Add summary information
+    doc.setFontSize(12);
+    doc.setTextColor(0, 102, 204);
+    doc.text('Resumen:', 14, 45);
+    doc.setTextColor(33, 37, 41);
+    doc.setFontSize(10);
+    const summaryData = [
+      [`Total Productos: ${totalProductos}`, `Valor Inventario: ${formatPrecio(valorInventario)}`],
+      [`Productos Sin Stock: ${productosSinStock.length}`, `Productos en Stock Crítico: ${productosCriticos.length}`]
+    ];
+    
+    autoTable(doc, {
+      startY: 50,
+      head: [['Información de Inventario', '']],
+      body: summaryData,
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [230, 126, 34], 
+        textColor: [255, 255, 255],
+        fontStyle: 'bold' 
+      },
+      styles: {
+        fontSize: 10,
+        cellPadding: 5
+      }
+    });
+    
+    // Get filtered products data for the table
+    const tableData = productosFiltrados.map(producto => {
+      if (vistaActual === 'critico') {
+        return [
+          producto.nombre,
+          producto.sku,
+          `${producto.stock} unidades`,
+          `${producto.nivelMinimo} unidades`,
+          producto.proveedor.nombre,
+          formatFecha(producto.ultimoPedido)
+        ];
+      } else {
+        return [
+          producto.nombre,
+          producto.sku,
+          `${producto.stock} unidades`,
+          `${producto.tiempoSinStock} días`,
+          producto.proveedor.nombre,
+          formatFecha(producto.ultimoPedido)
+        ];
+      }
+    });
+    
+    // Add the main product table
+    const headers = vistaActual === 'critico' 
+      ? ['Producto', 'SKU', 'Stock Actual', 'Nivel Mínimo', 'Proveedor', 'Último Pedido']
+      : ['Producto', 'SKU', 'Stock Actual', 'Tiempo Sin Stock', 'Proveedor', 'Último Pedido'];
+    
+    autoTable(doc, {
+      startY: doc.lastAutoTable.finalY + 10,
+      head: [headers],
+      body: tableData,
+      theme: 'grid',
+      headStyles: { 
+        fillColor: [230, 126, 34], 
+        textColor: [255, 255, 255],
+        fontStyle: 'bold' 
+      },
+      bodyStyles: {
+        fontSize: 8
+      },
+      alternateRowStyles: {
+        fillColor: [245, 245, 245]
+      },
+      styles: {
+        cellPadding: 3,
+        fontSize: 8,
+        overflow: 'linebreak'
+      },
+      columnStyles: {
+        0: { cellWidth: 50 },
+        4: { cellWidth: 40 }
+      }
+    });
+    
+    // Add footer
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(128, 128, 128);
+      
+      // Footer line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(10, pageHeight - 20, pageWidth - 10, pageHeight - 20);
+      
+      // Footer text
+      doc.text(
+        `FerreMarket - Reporte de Inventario - Página ${i} de ${totalPages}`,
+        pageWidth / 2, 
+        pageHeight - 10, 
+        { align: 'center' }
+      );
+    }
+    
+    // Save the PDF
+    const fileName = `ferremarket_reporte_inventario_${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    doc.save(fileName);
+  };
+
   const exportarReporte = (formato: string) => {
-    console.log(`Exportando reporte de ${vistaActual} en formato ${formato}`);
-    // Aquí iría la lógica de exportación
+    if (formato === 'pdf') {
+      generatePDF();
+    } else if (formato === 'excel') {
+      console.log(`Exportando reporte de ${vistaActual} en formato Excel`);
+      // Excel export functionality would go here
+    }
   };
 
   const limpiarFiltros = () => {
@@ -120,14 +268,14 @@ const ReportesInventario: React.FC = () => {
         <div className="flex space-x-2">
           <button
             onClick={() => exportarReporte('pdf')}
-            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center"
+            className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center transition-colors"
           >
             <FileText size={20} className="mr-2" />
             Exportar PDF
           </button>
           <button
             onClick={() => exportarReporte('excel')}
-            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center"
+            className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center transition-colors"
           >
             <FileSpreadsheet size={20} className="mr-2" />
             Exportar Excel
