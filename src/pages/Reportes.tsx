@@ -1,13 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Package, DollarSign, AlertTriangle, AlertCircle, 
   Search, Filter, Download, FileText, FileSpreadsheet,
   ArrowUpDown, Calendar, Truck, Plus, Eye
 } from 'lucide-react';
-import { productos, categorias } from '../data/mockData';
+import { categorias, obtenerProductos } from '../data/mockData';
 import { formatPrecio, formatFecha, calcularStockTotal, calcularValorInventario } from '../utils/formatters';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import ReposicionModal from '../components/modals/ReposicionModal';
+import { Producto } from '../types';
 
 // Mock data para proveedores
 const proveedores = [
@@ -18,16 +19,6 @@ const proveedores = [
 ];
 
 // Extender productos con información adicional para reportes
-const productosExtendidos = productos.map(producto => ({
-  ...producto,
-  sku: `SKU-${producto.id.padStart(4, '0')}`,
-  nivelMinimo: Math.max(10, Math.floor(producto.stock * 0.2)), // Mínimo 3 unidades o 20% del stock actual
-  proveedor: proveedores[Math.floor(Math.random() * proveedores.length)],
-  ultimoPedido: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-  ventasPromedio: Math.floor(Math.random() * 10) + 5, // Ventas promedio mensuales
-  tiempoSinStock: producto.stock === 0 ? Math.floor(Math.random() * 15) + 1 : 0
-}));
-
 const ReportesInventario: React.FC = () => {
   const [reposicionModalOpen, setReposicionModalOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<any>(null);
@@ -38,6 +29,28 @@ const ReportesInventario: React.FC = () => {
   const [filtroPrecio, setFiltroPrecio] = useState({ min: '', max: '' });
   const [filtroFecha, setFiltroFecha] = useState('');
   const [ordenamiento, setOrdenamiento] = useState({ campo: 'stock', direccion: 'asc' });
+
+  const [productos, setProductos] = useState<Producto[]>([]);
+  
+  const productosExtendidos = useMemo(() => {
+    return productos.map(producto => ({
+      ...producto,
+      nivelMinimo: Math.max(10, Math.floor(producto.stock * 0.2)), // Mínimo 10 unidades o 20% del stock actual
+      proveedor: proveedores[Math.floor(Math.random() * proveedores.length)],
+      ultimoPedido: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
+      ventasPromedio: Math.floor(Math.random() * 10) + 5, // Ventas promedio mensuales
+      tiempoSinStock: producto.stock === 0 ? Math.floor(Math.random() * 15) + 1 : 0 // Días sin stock
+    }));
+  }, [productos]);
+
+  const cargarProductos = async () => {
+    const productosData = await obtenerProductos();
+    setProductos(productosData);
+  }
+
+  useEffect(() => {
+    cargarProductos();
+  }, []);
 
   // Calcular KPIs
   const totalProductos = productos.length;
@@ -399,7 +412,7 @@ const ReportesInventario: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <button
                       onClick={() => handleSolicitarReposicion(producto)}
-                      className="bg-blue-600 text-white px-3 py-1 rounded-md text-sm hover:bg-blue-700 flex items-center"
+                      className="bg-orange-500 text-white px-3 py-1 rounded-md text-sm hover:bg-amber-700 flex items-center"
                     >
                       <Truck size={14} className="mr-1" />
                       Solicitar Reposición

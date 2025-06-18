@@ -125,15 +125,3 @@ export interface UsuarioFormData {
   rol: 'admin' | 'usuario';
   estado: 'activo' | 'inactivo';
 }
-
-export interface UsuarioFirebase {
-  uid: string;
-  nombre: string;
-  email: string;
-  rol: 'admin' | 'usuario';
-  estado: 'activo' | 'inactivo';
-  fechaCreacion: string;
-  ultimaModificacion: string;
-  ultimoAcceso?: string;
-  avatar?: string;
-}
