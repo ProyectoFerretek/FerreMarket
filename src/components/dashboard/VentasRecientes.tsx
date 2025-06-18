@@ -1,13 +1,31 @@
-import React, { useState } from 'react';
-import { ventas, clientes } from '../../data/mockData';
-import { formatPrecio, formatFecha, getNombreCliente, getEstadoVenta } from '../../utils/formatters';
+import React, { useEffect, useState } from 'react';
+import { obtenerClientes, obtenerVentasRecientes } from '../../data/mockData';
+import { formatPrecio, formatFecha, getEstadoVenta } from '../../utils/formatters';
 import { Calendar, User, CreditCard, Package, Eye, ChevronDown } from 'lucide-react';
+import { Cliente, Venta } from '../../types';
 
 const VentasRecientes: React.FC = () => {
   const [cantidadVentas, setCantidadVentas] = useState(5);
 
+  const [ventasRecientes, setVentasRecientes] = useState<Venta[]>([]);
+  const cargarVentasRecientes = async () => {
+    const ventasRecientesData = await obtenerVentasRecientes(cantidadVentas);
+    setVentasRecientes(ventasRecientesData);
+  }
+
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const cargarClientes = async () => {
+    const clientesData = await obtenerClientes();
+    setClientes(clientesData);
+  }
+
+  useEffect(() => {
+    cargarVentasRecientes();
+    cargarClientes();
+  }, [cantidadVentas]);
+
   // Ordenar ventas por fecha (más recientes primero) y aplicar límite seleccionado
-  const ventasOrdenadas = [...ventas]
+  const ventasOrdenadas = [...ventasRecientes]
     .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime())
     .slice(0, cantidadVentas);
 
@@ -46,7 +64,7 @@ const VentasRecientes: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ventasOrdenadas.map(venta => {
             const estadoInfo = getEstadoVenta(venta.estado);
-            const cliente = clientes.find(c => c.id === venta.cliente);
+            const cliente = clientes.find(c => Number(c.id) === Number(venta.cliente));
             
             return (
               <div 

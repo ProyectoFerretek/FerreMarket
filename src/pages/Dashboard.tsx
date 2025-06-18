@@ -1,50 +1,117 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ShoppingCart, DollarSign, Package, Users, Library } from 'lucide-react';
 import { formatPrecio } from '../utils/formatters';
-import { productos, ventas, estadisticasVentas, clientes, calcularValorInventario, calcularStockTotal, obtenerClientesRegistrados } from '../data/mockData';
+import { 
+  calcularValorInventario, 
+  calcularStockTotal, 
+  obtenerClientesRegistrados,
+  obtenerVentas 
+} from '../data/mockData';
 
 import EstadisticaCard from '../components/dashboard/EstadisticaCard';
 import GraficoVentas from '../components/dashboard/GraficoVentas';
 import ProductosDestacados from '../components/dashboard/ProductosDestacados';
 import VentasRecientes from '../components/dashboard/VentasRecientes';
 import CategoriasProductos from '../components/dashboard/CategoriasProductos';
+import EstadisticaCardFlow from '../components/dashboard/EstadisticaCardFlow';
 
 const Dashboard: React.FC = () => {
-  // Estado para valor del inventario
+  // Estado para estadísticas
   const [valorInventario, setValorInventario] = useState<number>(0);
   const [stockInventario, setStockInventario] = useState<number>(0);
   const [totalClientes, setTotalClientes] = useState<number>(0);
+  const [totalVentas, setTotalVentas] = useState<number>(0);
+  const [incrementoVentas, setIncrementoVentas] = useState<number>(0);
+  const [ventasPorDia, setVentasPorDia] = useState<{ fecha: string; ventas: number }[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   
-  // Calcular totales
-  const totalVentas = ventas.reduce((total, venta) => total + venta.total, 0);
-  // const totalProductos = calcularStockTotal(productos);
-  
-  // Cargar el valor del inventario de manera asíncrona
-  useEffect(() => {
-    const cargarValorInventario = async () => {
-      const valor = await calcularValorInventario();
-      setValorInventario(valor);
-    };
-
-    const cargarStockTotal = async () => {
-      const totalProductos = await calcularStockTotal();
-      setStockInventario(totalProductos);
-    }
-
-    const cargarClientesRegistrados = async () => {
-      const clientesRegistrados = await obtenerClientesRegistrados();
-      setTotalClientes(clientesRegistrados);
-    }
+  // Función para cargar datos
+  const cargarDatos = useCallback(async () => {
+    setIsLoading(true);
     
-    cargarValorInventario();
-    cargarStockTotal();
-    cargarClientesRegistrados();
+    try {
+      // Cargar todos los datos necesarios en paralelo
+      const [valor, totalProductos, clientesRegistrados, ventas] = await Promise.all([
+        calcularValorInventario(),
+        calcularStockTotal(),
+        obtenerClientesRegistrados(),
+        obtenerVentas()
+      ]);
+      
+      setValorInventario(valor);
+      setStockInventario(totalProductos);
+      setTotalClientes(clientesRegistrados);
+      
+      // Calcular el total de ventas
+      const totalDeVentas = ventas.reduce((total, venta) => total + venta.total, 0);
+      setTotalVentas(totalDeVentas);
+      
+      // Calcular las ventas por día para el gráfico
+      const ventasPorDiaMap = new Map<string, number>();
+      
+      // Obtener los últimos 30 días
+      const hoy = new Date();
+      const fechas = Array.from({ length: 30 }, (_, i) => {
+        const fecha = new Date();
+        fecha.setDate(hoy.getDate() - (29 - i));
+        return fecha.toISOString().split('T')[0];
+      });
+      
+      // Inicializar todas las fechas con 0 ventas
+      fechas.forEach(fecha => ventasPorDiaMap.set(fecha, 0));
+      
+      // Sumar las ventas por día
+      ventas.forEach(venta => {
+        const fechaVenta = venta.fecha.split('T')[0];
+        if (ventasPorDiaMap.has(fechaVenta)) {
+          ventasPorDiaMap.set(fechaVenta, ventasPorDiaMap.get(fechaVenta)! + venta.total);
+        }
+      });
+      
+      // Convertir el mapa a un array para el gráfico
+      const ventasPorDiaArray = Array.from(ventasPorDiaMap.entries())
+        .map(([fecha, ventas]) => ({ fecha, ventas }))
+        .sort((a, b) => a.fecha.localeCompare(b.fecha));
+      
+      setVentasPorDia(ventasPorDiaArray);
+      
+      // Calcular incremento de ventas (comparando el último día con el penúltimo)
+      if (ventasPorDiaArray.length >= 2) {
+        const ultimoDia = ventasPorDiaArray[ventasPorDiaArray.length - 1].ventas;
+        const penultimoDia = ventasPorDiaArray[ventasPorDiaArray.length - 2].ventas;
+        
+        // Evitar división por cero
+        if (penultimoDia !== 0) {
+          const incremento = Math.round((ultimoDia - penultimoDia) / penultimoDia * 100);
+          setIncrementoVentas(incremento);
+        } else if (ultimoDia > 0) {
+          // Si no hubo ventas el día anterior, pero sí hoy
+          setIncrementoVentas(100);
+        } else {
+          setIncrementoVentas(0);
+        }
+      }
+    } catch (error) {
+      console.error("Error cargando datos del dashboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  // Calcular incremento de ventas (comparando el último día con el penúltimo)
-  const ultimoDia = estadisticasVentas[estadisticasVentas.length - 1].ventas;
-  const penultimoDia = estadisticasVentas[estadisticasVentas.length - 2].ventas;
-  const incrementoVentas = Math.round((ultimoDia - penultimoDia) / penultimoDia * 100);
+  // Cargar datos al montar el componente y cuando se vuelve a enfocar la ventana
+  useEffect(() => {
+    cargarDatos();
+    
+    // Actualizar datos cuando la ventana obtiene foco (por ejemplo, al volver de otra página)
+    const handleFocus = () => {
+      cargarDatos();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [cargarDatos]);
 
   return (
     <div className="space-y-4 sm:space-y-6 mt-0">
@@ -62,30 +129,37 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <EstadisticaCard
           titulo="Ventas Totales"
-          valor={formatPrecio(totalVentas)}
+          valor={isLoading ? "Cargando..." : formatPrecio(totalVentas)}
           icono={<ShoppingCart size={20} className="text-white" />}
           colorClase="bg-orange-500 text-white"
           incremento={incrementoVentas}
           comparacionTexto="vs. ayer"
         />
 
-        <EstadisticaCard
+        {/* <EstadisticaCard
           titulo="Valor del Inventario"
-          valor={formatPrecio(valorInventario)}
+          valor={isLoading ? "Cargando..." : formatPrecio(valorInventario)}
+          icono={<DollarSign size={20} className="text-white" />}
+          colorClase="bg-orange-500 text-white"
+        /> */}
+
+        <EstadisticaCardFlow
+          titulo="Valor del Inventario"
+          valor={isLoading ? 0 : valorInventario}
           icono={<DollarSign size={20} className="text-white" />}
           colorClase="bg-orange-500 text-white"
         />
 
         <EstadisticaCard
           titulo="Total de Productos"
-          valor={stockInventario}
+          valor={isLoading ? "Cargando..." : stockInventario}
           icono={<Package size={20} className="text-white" />}
           colorClase="bg-orange-500 text-white"
         />
 
         <EstadisticaCard
           titulo="Clientes Registrados"
-          valor={totalClientes}
+          valor={isLoading ? "Cargando..." : totalClientes}
           icono={<Users size={20} className="text-white" />}
           colorClase="bg-orange-500 text-white"
         />
@@ -94,7 +168,7 @@ const Dashboard: React.FC = () => {
       {/* Gráfico de ventas y categorías */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <GraficoVentas />
+          <GraficoVentas datos={ventasPorDia} isLoading={isLoading} />
         </div>
         <div className="lg:col-span-1">
           <CategoriasProductos />

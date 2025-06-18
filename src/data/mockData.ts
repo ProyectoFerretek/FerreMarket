@@ -517,6 +517,47 @@ export const obtenerProductos = async (): Promise<Producto[]> => {
     }
 };
 
+export const obtenerProductosDestacados = async (limit: number): Promise<Producto[]> => {
+    const productosDestacados: Producto[] = [];
+
+    try {
+        const { data: productos } = await supabase
+        .from("ventas_productos")
+        .select("producto_id, cantidad")
+        .order("cantidad", { ascending: false })
+        .limit(limit);
+
+        if (productos) {
+            for (const producto of productos) {
+                const { data: productoData } = await supabase
+                .from("productos")
+                .select("*")
+                .eq("id", producto.producto_id)
+                .single();
+
+                if (productoData && !productosDestacados.some(p => p.id === productoData.id)) {
+                    productosDestacados.push({
+                        id: productoData.id,
+                        sku: productoData.sku,
+                        nombre: productoData.nombre,
+                        descripcion: productoData.descripcion,
+                        precio: productoData.precio,
+                        categoria: productoData.categoria,
+                        stock: productoData.stock,
+                        imagen: productoData.imagen,
+                        destacado: productoData.destacado || false,
+                    });
+                }
+            }
+        }
+
+        return productosDestacados;
+    } catch (error) {
+        console.error("Error al obtener productos destacados:", error);
+        throw new Error(`Error al obtener productos destacados: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
 // CLIENTES
 
 export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIndividual | ClienteEmpresarial) => {
@@ -624,55 +665,7 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
     }
 }
 
-// Add a new function to update an existing client
-export const actualizarCliente = async (clienteId: string, clienteData: any) => {
-    let userData: any = {};
-
-    if (clienteData.tipoCliente === "individual") {
-        userData = {
-            nombre: clienteData.nombre,
-            apellidos: (clienteData as ClienteIndividual).apellidos || "",
-            email: clienteData.email,
-            telefono: clienteData.telefono,
-            direccion: (clienteData as ClienteIndividual).direccion || "",
-            run: (clienteData as ClienteIndividual).run,
-            estado: "activo",
-            notas: (clienteData as ClienteIndividual).notas || "",
-            tipo: "individual",
-        };
-    } else if (clienteData.tipoCliente === "empresa") {
-        userData = {
-            razonsocial: (clienteData as ClienteEmpresarial).razonSocial,
-            nombre: (clienteData as ClienteEmpresarial).nombreComercial || "",
-            email: clienteData.email,
-            telefono: clienteData.telefono,
-            direccion: (clienteData as ClienteEmpresarial).direccion || "",
-            rut: (clienteData as ClienteEmpresarial).rut || "",
-            giro: (clienteData as ClienteEmpresarial).giro || "",
-            estado: "activo",
-            notas: (clienteData as ClienteEmpresarial).notas || "",
-            tipo: "empresarial",
-        };
-    }
-
-    try {
-        const { error } = await supabase
-        .from("clientes")
-        .update(userData)
-        .eq("id", Number(clienteId));
-
-        if (error) {
-            console.error("Error al actualizar cliente:", error);
-            throw new Error(`Error al actualizar cliente: ${error.message}`);
-        }
-
-        console.log("¡Cliente actualizado correctamente!");
-        return true;
-    } catch (err) {
-        console.error("Error en la operación:", err);
-        throw err;
-    }
-};
+export const actualizarCliente = async (id: string, cliente: Cliente) => {}
 
 export const eliminarCliente = async (clientId: string) => {
     const { error } = await supabase
@@ -866,6 +859,56 @@ export const obtenerVentas = async (): Promise<Venta[]> => {
     } catch (error) {
         console.error("Error al obtener ventas:", error);
         throw new Error(`Error al obtener ventas: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+export const obtenerVentasRecientes = async (cantidad: number): Promise<Venta[]> => {
+    const ventasList: Venta[] = [];
+
+    try {
+        const { data: ventas, error } = await supabase
+        .from("ventas")
+        .select("*")
+        .order("fecha", { ascending: false })
+        .limit(cantidad);
+
+        if (error) {
+            console.error("Error al obtener ventas recientes:", error);
+            throw new Error(`Error al obtener ventas recientes: ${error.message}`);
+        }
+
+        const { data: productosVentas, error: productosError } = await supabase
+        .from("ventas_productos")
+        .select("*");
+
+        if (productosError) {
+            console.error("Error al obtener productos de ventas:", productosError);
+            throw new Error(`Error al obtener productos de ventas: ${productosError.message}`);
+        }
+
+        // Mapear las ventas y sus productos
+        for (const venta of ventas) {
+            const productos = productosVentas.filter(p => p.venta_id === venta.id).map(p => ({
+                id: p.producto_id,
+                cantidad: p.cantidad,
+                precioUnitario: p.precio_unitario,
+            }));
+
+            ventasList.push({
+                id: venta.id,
+                fecha: venta.fecha,
+                cliente: venta.cliente,
+                productos: productos, // Los productos se obtienen aquí
+                total: venta.total,
+                metodoPago: venta.metodo_pago,
+                estado: venta.estado,
+            });
+        }
+
+        return ventasList;
+    } catch (error) {
+        console.error("Error al obtener ventas recientes:", error);
+        throw new Error(`Error al obtener ventas recientes: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 }
 
