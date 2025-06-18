@@ -13,7 +13,6 @@ import GraficoVentas from '../components/dashboard/GraficoVentas';
 import ProductosDestacados from '../components/dashboard/ProductosDestacados';
 import VentasRecientes from '../components/dashboard/VentasRecientes';
 import CategoriasProductos from '../components/dashboard/CategoriasProductos';
-import EstadisticaCardFlow from '../components/dashboard/EstadisticaCardFlow';
 
 const Dashboard: React.FC = () => {
   // Estado para estadísticas
@@ -103,14 +102,14 @@ const Dashboard: React.FC = () => {
     cargarDatos();
     
     // Actualizar datos cuando la ventana obtiene foco (por ejemplo, al volver de otra página)
-    const handleFocus = () => {
-      cargarDatos();
-    };
+    // const handleFocus = () => {
+    //   cargarDatos();
+    // };
     
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
+    // window.addEventListener('focus', handleFocus);
+    // return () => {
+    //   window.removeEventListener('focus', handleFocus);
+    // };
   }, [cargarDatos]);
 
   return (
@@ -136,16 +135,9 @@ const Dashboard: React.FC = () => {
           comparacionTexto="vs. ayer"
         />
 
-        {/* <EstadisticaCard
+        <EstadisticaCard
           titulo="Valor del Inventario"
           valor={isLoading ? "Cargando..." : formatPrecio(valorInventario)}
-          icono={<DollarSign size={20} className="text-white" />}
-          colorClase="bg-orange-500 text-white"
-        /> */}
-
-        <EstadisticaCardFlow
-          titulo="Valor del Inventario"
-          valor={isLoading ? 0 : valorInventario}
           icono={<DollarSign size={20} className="text-white" />}
           colorClase="bg-orange-500 text-white"
         />
