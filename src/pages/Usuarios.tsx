@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { agregarUsuario, eliminarUsuario, obtenerUsuarios } from "../data/mockData";
 import { formatFecha } from "../utils/formatters";
-import { puedeGestionarUsuarios, puedeRealizarAccion, registrarCuenta } from "../utils/auth";
+import { puedeGestionarUsuarios, puedeRealizarAccion } from "../utils/auth";
 import UsuarioModal from "../components/modals/UsuarioModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import type { Usuario, UsuarioFormData } from "../types";
@@ -124,13 +124,7 @@ const GestionUsuarios: React.FC = () => {
         setConfirmOpen(true);
     };
 
-    const handleRecuperar = (usuario: Usuario) => {
-        // Aquí podrías implementar la lógica para recuperar la contraseña
-        console.log("Recuperar contraseña para usuario:", usuario.id);
-        alert(
-            `Funcionalidad de recuperación de contraseña no implementada para el usuario: ${usuario.nombre}`
-        ); 
-    }
+    const handleRecuperar = (usuario: Usuario) => {}
 
     const confirmarEliminacion = async () => {
         // await eliminarCuenta(usuarioSeleccionado!.id).then(async () => {
@@ -144,14 +138,8 @@ const GestionUsuarios: React.FC = () => {
 
     const handleGuardarUsuario = async (usuarioData: UsuarioFormData) => {
         if (usuarioSeleccionado) {
-            console.log(
-                "Actualizando usuario:",
-                usuarioSeleccionado.id,
-                usuarioData
-            );
+            console.log("Actualizando usuario:", usuarioData);
         } else {
-            console.log("Creando nuevo usuario:", usuarioData);
-
             const NuevoUsuario = {
                 uid: "",
                 nombre: usuarioData.nombre,

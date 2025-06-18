@@ -13,23 +13,34 @@ export const formatPrecio = (valor: number): string => {
  * Formatea una fecha ISO a formato localizado español chileno
  */
 export const formatFecha = (fechaIso: string, incluirHora: boolean = false): string => {
-  const fecha = new Date(fechaIso);
+  if (!fechaIso) return 'Sin fecha registrada';
   
-  const opciones: Intl.DateTimeFormatOptions = incluirHora 
-    ? { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      } 
-    : { 
-        day: '2-digit', 
-        month: '2-digit', 
-        year: 'numeric' 
-      };
-  
-  return fecha.toLocaleDateString('es-CL', opciones);
+  try {
+    const fecha = new Date(fechaIso);
+    
+    // Check if the date is invalid
+    if (isNaN(fecha.getTime())) {
+      return 'Sin fecha registrada';
+    }
+    
+    const opciones: Intl.DateTimeFormatOptions = incluirHora 
+      ? { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        } 
+      : { 
+          day: '2-digit', 
+          month: '2-digit', 
+          year: 'numeric' 
+        };
+    
+    return fecha.toLocaleDateString('es-CL', opciones);
+  } catch (error) {
+    return 'Sin fecha registrada';
+  }
 };
 
 /**

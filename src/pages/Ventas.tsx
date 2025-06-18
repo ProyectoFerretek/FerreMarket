@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   Plus, Search, Filter, Calendar, Download, Eye, Edit2, Trash2, 
   ArrowUpDown, FileText, FileSpreadsheet, FileDown, TrendingUp,
@@ -6,11 +6,12 @@ import {
   MoreVertical, SlidersHorizontal, Grid3X3, List, Mail, Send,
   PieChart, BarChart3, Activity, Target, Bookmark, BookmarkCheck
 } from 'lucide-react';
-import { ventas, clientes, productos } from '../data/mockData';
+import { obtenerVentas, obtenerProductos, obtenerClientes } from '../data/mockData';
 import { formatPrecio, formatFecha, getNombreCliente, getEstadoVenta } from '../utils/formatters';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import VentaModal from '../components/modals/VentaModal';
 import VentaPreview from '../components/preview/VentaPreview';
+import { Cliente, Producto, Venta } from "../types";
 
 const Ventas: React.FC = () => {
   // Estados principales
@@ -18,6 +19,52 @@ const Ventas: React.FC = () => {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [ventaSeleccionada, setVentaSeleccionada] = useState<any>(null);
+
+  const [ventas, setVentas] = useState<Venta[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
+  
+  const cargarVentas = useCallback(async () => {
+    const ventasData = await obtenerVentas();
+    setVentas(ventasData);
+  }, []);
+
+  const [productos, setProductos] = useState<Producto[]>([]);
+  const cargarProductos = useCallback(async () => {
+    const productosData = await obtenerProductos();
+    setProductos(productosData);
+  }, []);
+
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const cargarClientes = useCallback(async () => {
+    const clientesData = await obtenerClientes();
+    setClientes(clientesData);
+  }, []);
+
+  // Add a function to refresh all data
+  const refreshData = useCallback(async () => {
+    await Promise.all([
+      cargarVentas(),
+      cargarProductos(),
+      cargarClientes()
+    ]);
+    setRefreshKey(prev => prev + 1);
+  }, [cargarVentas, cargarProductos, cargarClientes]);
+
+  // Update the useEffect to use refreshData
+  useEffect(() => {
+    refreshData();
+    
+    // Set up a focus event listener to refresh data when tab becomes active
+    const handleFocus = () => {
+      refreshData();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [refreshData]);
   
   // Estados de filtros y búsqueda
   const [busqueda, setBusqueda] = useState('');
@@ -45,7 +92,7 @@ const Ventas: React.FC = () => {
   const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1024);
 
   // Detectar cambios de tamaño de pantalla
-  React.useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       const width = window.innerWidth;
       setIsMobile(width < 768);
@@ -120,14 +167,13 @@ const Ventas: React.FC = () => {
       metodosPago,
       estados
     };
-  }, []);
+  }, [ventas, refreshKey]);
 
   // Filtrar ventas
   const ventasFiltradas = useMemo(() => {
     return ventas
       .filter(venta => {
-        const matchBusqueda = venta.id.toLowerCase().includes(busqueda.toLowerCase()) ||
-                            getNombreCliente(venta.cliente, clientes).toLowerCase().includes(busqueda.toLowerCase());
+        const matchBusqueda = getNombreCliente(venta.cliente, clientes).toLowerCase().includes(busqueda.toLowerCase());
         
         const matchEstado = !filtroEstado || venta.estado === filtroEstado;
         const matchMetodo = !filtroMetodoPago || venta.metodoPago === filtroMetodoPago;
@@ -348,7 +394,7 @@ const Ventas: React.FC = () => {
             return (
               <div key={metodo} className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-3 bg-blue-500"></div>
+                  <div className="w-3 h-3 rounded-full mr-3 bg-orange-500"></div>
                   <span className="text-sm text-gray-700">{metodo}</span>
                 </div>
                 <div className="text-right">
@@ -366,7 +412,7 @@ const Ventas: React.FC = () => {
   // Componente de Tarjeta de Venta con layout mejorado
   const VentaCard = ({ venta }: { venta: any }) => {
     const estadoInfo = getEstadoVenta(venta.estado);
-    const cliente = clientes.find(c => c.id === venta.cliente);
+    const cliente = clientes.find(c => Number(c.id) === Number(venta.cliente));
     const isSelected = ventasSeleccionadas.includes(venta.id);
 
     return (
@@ -478,6 +524,9 @@ const Ventas: React.FC = () => {
     );
   };
 
+  // Memoize the VentaCard component to prevent unnecessary re-renders
+  const MemoizedVentaCard = React.memo(VentaCard);
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Header responsive */}
@@ -515,7 +564,7 @@ const Ventas: React.FC = () => {
           
           <button
             onClick={() => setModalOpen(true)}
-            className="bg-blue-700 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center text-sm font-medium transition-colors"
+            className="bg-orange-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center text-sm font-medium transition-colors"
           >
             <Plus size={16} className="mr-1 sm:mr-2" />
             <span className="hidden sm:inline">Nueva Venta</span>
@@ -718,13 +767,6 @@ const Ventas: React.FC = () => {
                 <FileSpreadsheet size={14} className="mr-1" />
                 Excel
               </button>
-              <button
-                onClick={() => exportarSeleccion('csv')}
-                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center text-sm transition-colors"
-              >
-                <FileDown size={14} className="mr-1" />
-                CSV
-              </button>
             </div>
           </div>
         </div>
@@ -740,7 +782,7 @@ const Ventas: React.FC = () => {
               : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
         }`}>
           {ventasEnPagina.map(venta => (
-            <VentaCard key={venta.id} venta={venta} />
+            <MemoizedVentaCard key={venta.id} venta={venta} />
           ))}
         </div>
       )}
@@ -930,9 +972,9 @@ const Ventas: React.FC = () => {
           </p>
           <button
             onClick={limpiarFiltros}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 transition-colors"
           >
-            Limpiar filtros
+            Limpiar Filtros
           </button>
         </div>
       )}
@@ -964,7 +1006,7 @@ const Ventas: React.FC = () => {
                         onClick={() => setPagina(pageNum)}
                         className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                           pagina === pageNum
-                            ? 'bg-blue-600 text-white'
+                            ? 'bg-orange-500 text-white'
                             : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
                         }`}
                       >
@@ -995,7 +1037,8 @@ const Ventas: React.FC = () => {
       {modalOpen && (
         <VentaModal
           venta={ventaSeleccionada}
-          onClose={() => {
+          onClose={async () => {
+            await refreshData(); // Use refreshData instead
             setModalOpen(false);
             setVentaSeleccionada(null);
           }}
@@ -1017,7 +1060,6 @@ const Ventas: React.FC = () => {
           titulo="Eliminar Venta"
           mensaje={`¿Estás seguro de que deseas eliminar la venta #${ventaSeleccionada?.id}? Esta acción no se puede deshacer y se registrará en el historial del sistema.`}
           onConfirm={() => {
-            console.log('Eliminando venta:', ventaSeleccionada);
             setConfirmOpen(false);
             setVentaSeleccionada(null);
           }}

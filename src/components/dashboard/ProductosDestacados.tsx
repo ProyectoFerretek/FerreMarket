@@ -1,16 +1,39 @@
-import React, { useState } from 'react';
-import { productos } from '../../data/mockData';
+import React, { useEffect, useState } from 'react';
+import { obtenerProductosDestacados } from '../../data/mockData';
 import { formatPrecio } from '../../utils/formatters';
 import { CheckCircle, AlertTriangle, AlertCircle, XCircle, ChevronDown, Calculator } from 'lucide-react';
+import { Producto } from '../../types';
 
 const ProductosDestacados: React.FC = () => {
   const [itemsPorPagina, setItemsPorPagina] = useState(6);
   const [paginaActual, setPaginaActual] = useState(1);
 
-  // Filtrar productos destacados y ordenar por stock bajo
-  const productosDestacados = productos
-    .filter(producto => producto.destacado)
-    .sort((a, b) => a.stock - b.stock);
+  const [productos, setProductosDestacados] = useState<Producto[]>([]);
+  const cargarProductosDestacados = async () => {
+    const productosDestacadosData = await obtenerProductosDestacados(itemsPorPagina);
+    setProductosDestacados(productosDestacadosData);
+  }
+
+  useEffect(() => {
+    cargarProductosDestacados();
+  }, []);
+
+  // Filter to ensure unique products by ID and then sort by stock
+  const productosDestacados = React.useMemo(() => {
+    // Use a Map to ensure uniqueness by product ID
+    const uniqueProductMap = new Map();
+    
+    // First add all products to the map (this automatically handles duplicates)
+    productos.forEach(producto => {
+      if (producto.destacado) {
+        uniqueProductMap.set(producto.id, producto);
+      }
+    });
+    
+    // Convert back to array and sort by stock
+    return Array.from(uniqueProductMap.values())
+      .sort((a, b) => a.stock - b.stock);
+  }, [productos]);
 
   // Calcular paginación
   const totalProductos = productosDestacados.length;

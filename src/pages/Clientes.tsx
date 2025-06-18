@@ -5,7 +5,7 @@ import {
   Phone, MapPin, Calendar, ShoppingBag, MoreVertical,
   SlidersHorizontal, Grid3X3, List, Download
 } from 'lucide-react';
-import { clientes } from '../data/mockData';
+import { eliminarCliente, obtenerClientes } from '../data/mockData';
 import { formatFecha } from '../utils/formatters';
 import ClienteModal from '../components/modals/ClienteModal';
 import ConfirmDialog from '../components/common/ConfirmDialog';
@@ -40,6 +40,16 @@ const Clientes: React.FC = () => {
     direccion: 'asc'
   });
 
+  const [clientes, setClientes] = useState<Cliente[]>();
+  const cargarClientes = async () => {
+      const clientesData = await obtenerClientes();
+      setClientes(clientesData);
+  }
+
+  useEffect(() => {
+      cargarClientes();
+  }, [])
+
   // Estados responsive
   const [isMobile, setIsMobile] = useState(false);
   const [isTablet, setIsTablet] = useState(false);
@@ -70,7 +80,7 @@ const Clientes: React.FC = () => {
 
   // Extender datos de clientes con información adicional
   const clientesExtendidos = useMemo(() => {
-    return clientes.map(cliente => ({
+    return clientes?.map(cliente => ({
       ...cliente,
       tipoCliente: cliente.tipoCliente || 'individual',
       identificacion: cliente.identificacion || `${Math.floor(Math.random() * 90000000) + 10000000}`,
@@ -78,8 +88,8 @@ const Clientes: React.FC = () => {
       fechaRegistro: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
       valorTotal: cliente.compras * (Math.random() * 50000 + 10000),
       ultimaActividad: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
-    }));
-  }, []);
+    })) || [];
+  }, [clientes]);
 
   // Filtrar y ordenar clientes
   const clientesFiltrados = useMemo(() => {
@@ -334,7 +344,7 @@ const Clientes: React.FC = () => {
   );
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-0 sm:space-y-0">
       {/* Header responsive */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
         <div>
@@ -679,7 +689,7 @@ const Clientes: React.FC = () => {
           </p>
           <button
             onClick={limpiarFiltros}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 transition-colors"
           >
             Limpiar filtros
           </button>
@@ -860,7 +870,8 @@ const Clientes: React.FC = () => {
       {modalOpen && (
         <ClienteModal
           cliente={clienteSeleccionado}
-          onClose={() => {
+          onClose={async () => {
+            await cargarClientes();
             setModalOpen(false);
             setClienteSeleccionado(null);
           }}
@@ -872,8 +883,13 @@ const Clientes: React.FC = () => {
         <ConfirmDialog
           titulo="Eliminar Cliente"
           mensaje={`¿Estás seguro de que deseas eliminar al cliente "${clienteSeleccionado?.nombre}"? Esta acción no se puede deshacer.`}
-          onConfirm={() => {
-            console.log('Eliminando cliente:', clienteSeleccionado);
+          onConfirm={async () => {
+            if (clienteSeleccionado?.id) {
+              await eliminarCliente(clienteSeleccionado.id).then(() => {
+                cargarClientes()
+              })
+            }
+
             setConfirmOpen(false);
             setClienteSeleccionado(null);
           }}

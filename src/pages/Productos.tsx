@@ -23,6 +23,7 @@ import { categorias, eliminarProducto, obtenerProductos } from "../data/mockData
 import { formatPrecio } from "../utils/formatters";
 import ProductoModal from "../components/modals/ProductoModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
+import { Producto } from "../types";
 
 const Productos: React.FC = () => {
     const [searchParams, setSearchParams] = useSearchParams();

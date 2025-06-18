@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   X, Plus, Trash2, AlertCircle, Calculator, ShoppingCart, 
   User, CreditCard, FileText, Calendar, Package, Search,
-  CheckCircle, Clock, XCircle, DollarSign, Tag, Save
+  CheckCircle, Clock, XCircle, DollarSign, Tag, Save, Building2, Mail, Phone, MapPin, ShoppingBag
 } from 'lucide-react';
-import { productos, clientes } from '../../data/mockData';
+import { obtenerClientes, obtenerProductos, agregarVenta } from '../../data/mockData';
 import { formatPrecio } from '../../utils/formatters';
+import { Cliente, Producto } from '../../types';
 
 interface VentaModalProps {
   venta?: any;
@@ -21,15 +22,38 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
     notas: '',
     fechaVenta: new Date().toISOString().split('T')[0],
     descuentoGeneral: 0,
-    impuestos: 18, // IGV 18%
-    moneda: 'PEN'
+    impuestos: 19, // IVA 19%
+    moneda: 'CLP'
   });
   
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const [busquedaProducto, setBusquedaProducto] = useState('');
+  // Replace single search state with an array
+  const [busquedaProductos, setBusquedaProductos] = useState<string[]>(['']);
   const [busquedaCliente, setBusquedaCliente] = useState('');
   const [mostrarCalculadora, setMostrarCalculadora] = useState(false);
+
+  const [clientes, setClientes] = useState<Cliente[]>();
+  const cargarClientes = async () => {
+    const dataClientes = await obtenerClientes();
+    setClientes(dataClientes);
+  }
+
+  // Add a function to get the selected client details
+  const clienteSeleccionadoData = useMemo(() => {
+    return clientes?.find(c => c.id === formData.cliente);
+  }, [clientes, formData.cliente]);
+
+  const [productos, setProductos] = useState<Producto[]>();
+  const cargarProductos = async () => {
+    const dataProductos = await obtenerProductos();
+    setProductos(dataProductos);
+  }
+
+  useEffect(() => {
+    cargarClientes();
+    cargarProductos();
+  }, []);
 
   // Bloquear scroll del body cuando el modal está abierto
   useEffect(() => {
@@ -50,27 +74,33 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
         fechaVenta: venta.fecha ? venta.fecha.split('T')[0] : new Date().toISOString().split('T')[0],
         descuentoGeneral: venta.descuentoGeneral || 0,
         impuestos: venta.impuestos || 18,
-        moneda: venta.moneda || 'PEN'
+        moneda: venta.moneda || 'CLP'
       });
+      // Initialize search array based on products count
+      setBusquedaProductos(new Array(venta.productos?.length || 1).fill(''));
     }
   }, [venta]);
 
-  // Filtrar productos y clientes para búsqueda
-  const productosFiltrados = productos.filter(producto =>
-    producto.nombre.toLowerCase().includes(busquedaProducto.toLowerCase()) ||
-    producto.id.includes(busquedaProducto)
-  );
+  // Update the filtered products function to work with index
+  const getProductosFiltrados = (searchTerm: string) => {
+    return productos?.filter(producto =>
+      producto.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      producto.sku.includes(searchTerm)
+    ) || [];
+  };
 
-  const clientesFiltrados = clientes.filter(cliente =>
+  const clientesFiltrados = clientes?.filter(cliente =>
     cliente.nombre.toLowerCase().includes(busquedaCliente.toLowerCase()) ||
     cliente.email.toLowerCase().includes(busquedaCliente.toLowerCase())
-  );
+  ) || [];
 
   const agregarProducto = () => {
     setFormData(prev => ({
       ...prev,
       productos: [...prev.productos, { id: '', cantidad: 1, precioUnitario: 0, descuento: 0 }]
     }));
+    // Add an empty search term for the new product
+    setBusquedaProductos(prev => [...prev, '']);
   };
 
   const eliminarProducto = (index: number) => {
@@ -79,7 +109,18 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
         ...prev,
         productos: prev.productos.filter((_, i) => i !== index)
       }));
+      // Remove the search term for the deleted product
+      setBusquedaProductos(prev => prev.filter((_, i) => i !== index));
     }
+  };
+
+  // Update product search term
+  const actualizarBusquedaProducto = (index: number, valor: string) => {
+    setBusquedaProductos(prev => {
+      const newBusquedas = [...prev];
+      newBusquedas[index] = valor;
+      return newBusquedas;
+    });
   };
 
   const actualizarProducto = (index: number, campo: string, valor: any) => {
@@ -88,7 +129,7 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
       productos: prev.productos.map((producto, i) => {
         if (i === index) {
           const nuevoProducto = { ...producto, [campo]: valor };
-          if (campo === 'id') {
+          if (campo === 'id' && productos) {
             const productoSeleccionado = productos.find(p => p.id === valor);
             if (productoSeleccionado) {
               nuevoProducto.precioUnitario = productoSeleccionado.precio;
@@ -168,16 +209,21 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       const ventaData = {
-        ...formData,
+        fecha: formData.fechaVenta,
+        cliente: formData.cliente,
         total: calcularTotal(),
-        subtotal: calcularSubtotal(),
-        descuentoTotal: calcularDescuentoGeneral(),
-        impuestosTotal: calcularImpuestos(),
-        fecha: venta ? venta.fecha : new Date().toISOString(),
-        id: venta ? venta.id : `V${Date.now()}`
-      };
-      
-      console.log('Guardando venta:', ventaData);
+        metodoPago: formData.metodoPago,
+        estado: formData.estado,
+        productos: formData.productos.map(p => ({
+          id: p.id,
+          cantidad: p.cantidad,
+          precioUnitario: p.precioUnitario,
+          descuento: p.descuento
+        })),
+      }
+
+      await agregarVenta(ventaData);
+
       onClose();
     } catch (error) {
       setErrors({ general: 'Error al guardar la venta. Inténtalo de nuevo.' });
@@ -218,7 +264,7 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
         {/* Header del Modal */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-xl flex-shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white">
               <ShoppingCart size={20} />
             </div>
             <div>
@@ -305,6 +351,70 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                       </div>
                     )}
                     
+                    {/* Cliente seleccionado - información */}
+                    {clienteSeleccionadoData && (
+                      <div className="mt-3 bg-blue-50 border border-blue-100 rounded-lg p-3">
+                        <div className="flex items-start">
+                          <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white flex-shrink-0">
+                            {clienteSeleccionadoData.tipoCliente === 'empresa' ? (
+                              <Building2 size={18} />
+                            ) : (
+                              <span className="text-sm font-semibold">
+                                {clienteSeleccionadoData.nombre.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="ml-3 flex-grow">
+                            <div className="flex flex-wrap justify-between">
+                              <div className="font-medium text-gray-900">{clienteSeleccionadoData.nombre}</div>
+                              <div className="text-xs">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full ${
+                                  clienteSeleccionadoData.tipoCliente === 'empresa' 
+                                    ? 'bg-purple-100 text-purple-800' 
+                                    : 'bg-blue-100 text-blue-800'
+                                }`}>
+                                  {clienteSeleccionadoData.tipoCliente === 'empresa' ? 'Empresa' : 'Individual'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1 gap-x-4 mt-1">
+                              <div className="flex items-center text-xs text-gray-600">
+                                <Mail size={10} className="mr-1" />
+                                {clienteSeleccionadoData.email}
+                              </div>
+                              <div className="flex items-center text-xs text-gray-600">
+                                <Phone size={10} className="mr-1" />
+                                {clienteSeleccionadoData.telefono}
+                              </div>
+                              <div className="flex items-center text-xs text-gray-600 sm:col-span-2">
+                                <MapPin size={10} className="mr-1 flex-shrink-0" />
+                                <span className="truncate">{clienteSeleccionadoData.direccion}</span>
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-blue-100">
+                              <div className="text-xs text-gray-700">
+                                <ShoppingBag size={10} className="inline mr-1" />
+                                <span className="font-semibold">{clienteSeleccionadoData.compras}</span> compras totales
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({ ...prev, cliente: '' }));
+                                  setBusquedaCliente('');
+                                }}
+                                className="text-xs text-red-600 hover:text-red-800"
+                              >
+                                <X size={10} className="inline mr-1" />
+                                Cambiar cliente
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
                     {errors.cliente && (
                       <p className="mt-1 text-sm text-red-600 flex items-center">
                         <AlertCircle size={14} className="mr-1" />
@@ -344,7 +454,9 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                     </label>
                     <select
                       value={formData.estado}
-                      onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                      onChange={(e) => {
+                        setFormData(prev => ({ ...prev, estado: e.target.value }))
+                      }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="pendiente">Pendiente</option>
@@ -389,7 +501,7 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                 <button
                   type="button"
                   onClick={agregarProducto}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 flex items-center transition-colors"
+                  className="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-700 flex items-center transition-colors"
                 >
                   <Plus size={16} className="mr-1" />
                   Agregar Producto
@@ -398,60 +510,127 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
 
               <div className="space-y-4">
                 {formData.productos.map((producto, index) => {
-                  const productoData = productos.find(p => p.id === producto.id);
+                  const productoData = productos?.find(p => p.id === producto.id);
                   const subtotalProducto = producto.cantidad * producto.precioUnitario;
                   const descuentoProducto = (subtotalProducto * producto.descuento) / 100;
                   const totalProducto = subtotalProducto - descuentoProducto;
+                  // Get filtered products for this specific index
+                  const productosFiltrados = getProductosFiltrados(busquedaProductos[index] || '');
 
                   return (
                     <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-                        {/* Producto */}
+                      {/* Labels row - add a separate row just for labels to ensure alignment */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-2">
                         <div className="lg:col-span-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                          <label className="block text-sm font-medium text-gray-700">
                             Producto *
                           </label>
-                          <div className="relative">
-                            <input
-                              type="text"
-                              value={busquedaProducto}
-                              onChange={(e) => setBusquedaProducto(e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                              placeholder="Buscar producto..."
-                            />
-                            {busquedaProducto && (
-                              <div className="absolute top-full left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-10">
-                                {productosFiltrados.map(prod => (
-                                  <button
-                                    key={prod.id}
-                                    type="button"
-                                    onClick={() => {
-                                      actualizarProducto(index, 'id', prod.id);
-                                      setBusquedaProducto('');
-                                    }}
-                                    className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                                  >
-                                    <div className="font-medium text-gray-900">{prod.nombre}</div>
-                                    <div className="text-sm text-gray-500">
-                                      {formatPrecio(prod.precio)} - Stock: {prod.stock}
-                                    </div>
-                                  </button>
-                                ))}
+                        </div>
+                        <div className="lg:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Cantidad
+                          </label>
+                        </div>
+                        <div className="lg:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Precio Unit.
+                          </label>
+                        </div>
+                        <div className="lg:col-span-2">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Desc. %
+                          </label>
+                        </div>
+                        <div className="lg:col-span-1">
+                          <label className="block text-sm font-medium text-gray-700">
+                            Total
+                          </label>
+                        </div>
+                        <div className="lg:col-span-1">
+                          {/* Empty label for delete button column */}
+                        </div>
+                      </div>
+                      
+                      {/* Input fields row - now all controls will be aligned */}
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+                        {/* Producto */}
+                        <div className="lg:col-span-4">
+                          {productoData ? (
+                            <div className="bg-white p-3 rounded-lg border border-gray-200 flex items-center">
+                              <div className="w-16 h-16 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                {productoData.imagen ? (
+                                  <img 
+                                    src={productoData.imagen} 
+                                    alt={productoData.nombre} 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <Package size={24} className="text-gray-400" />
+                                )}
                               </div>
-                            )}
-                          </div>
-                          {productoData && (
-                            <div className="mt-2 text-xs text-gray-600">
-                              Stock disponible: {productoData.stock} unidades
+                              <div className="ml-3 flex-grow">
+                                <div className="font-medium text-gray-900">{productoData.nombre}</div>
+                                <div className="text-sm text-gray-500 flex items-center">
+                                  <Tag size={12} className="mr-1" /> 
+                                  SKU: {productoData.sku}
+                                </div>
+                                <div className="text-sm mt-1 flex items-center">
+                                  <span className={`inline-flex items-center ${productoData.stock > 10 ? 'text-green-600' : productoData.stock > 0 ? 'text-amber-600' : 'text-red-600'}`}>
+                                    <Package size={12} className="mr-1" />
+                                    Stock: <span className="font-semibold ml-1">{productoData.stock} unidades</span>
+                                  </span>
+                                  {productoData.stock < producto.cantidad && (
+                                    <span className="ml-2 text-red-600 text-xs">¡Stock insuficiente!</span>
+                                  )}
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  actualizarProducto(index, 'id', '');
+                                  actualizarBusquedaProducto(index, '');
+                                }}
+                                className="ml-2 p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50"
+                                title="Cambiar producto"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <input
+                                type="text"
+                                value={busquedaProductos[index] || ''}
+                                onChange={(e) => actualizarBusquedaProducto(index, e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                placeholder="Buscar producto..."
+                              />
+                              {busquedaProductos[index] && (
+                                <div className="absolute top-full left-0 right-0 mt-1 max-h-40 overflow-y-auto bg-white border border-gray-200 rounded-lg shadow-lg z-10">
+                                  {productosFiltrados.map(prod => (
+                                    <button
+                                      key={prod.id}
+                                      type="button"
+                                      onClick={() => {
+                                        actualizarProducto(index, 'id', prod.id);
+                                        actualizarBusquedaProducto(index, '');
+                                      }}
+                                      className="w-full text-left px-3 py-2 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
+                                    >
+                                      <div className="font-medium text-gray-900">{prod.nombre}</div>
+                                      <div className="text-sm text-gray-500">
+                                        {formatPrecio(prod.precio)} - Stock: {prod.stock}
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
 
                         {/* Cantidad */}
                         <div className="lg:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Cantidad
-                          </label>
                           <input
                             type="number"
                             min="1"
@@ -463,9 +642,6 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
 
                         {/* Precio Unitario */}
                         <div className="lg:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Precio Unit.
-                          </label>
                           <div className="relative">
                             <DollarSign size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
@@ -480,16 +656,13 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
 
                         {/* Descuento */}
                         <div className="lg:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Desc. %
-                          </label>
                           <div className="relative">
                             <Tag size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
                               type="number"
                               min="0"
                               max="100"
-                              step="0.1"
+                              step="1"
                               value={producto.descuento}
                               onChange={(e) => actualizarProducto(index, 'descuento', parseFloat(e.target.value) || 0)}
                               className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -499,21 +672,18 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
 
                         {/* Total */}
                         <div className="lg:col-span-1">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Total
-                          </label>
-                          <div className="text-lg font-bold text-gray-900">
+                          <div className="text-lg font-bold text-gray-900 py-1">
                             {formatPrecio(totalProducto)}
                           </div>
                         </div>
 
                         {/* Eliminar */}
-                        <div className="lg:col-span-1">
+                        <div className="lg:col-span-1 flex items-center justify-center">
                           <button
                             type="button"
                             onClick={() => eliminarProducto(index)}
                             disabled={formData.productos.length === 1}
-                            className="w-full p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Eliminar producto"
                           >
                             <Trash2 size={16} />
@@ -540,60 +710,66 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
               )}
             </div>
 
-            {/* Descuentos e Impuestos */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4">
-                  Descuentos e Impuestos
-                </h3>
-                
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Descuento General (%)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={formData.descuentoGeneral}
-                      onChange={(e) => setFormData(prev => ({ ...prev, descuentoGeneral: parseFloat(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+            {/* Descuentos e Impuestos - Now in its own row */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4">
+                Descuentos e Impuestos
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Descuento General (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={formData.descuentoGeneral === 0 ? '' : formData.descuentoGeneral}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        descuentoGeneral: value === '' ? 0 : parseFloat(value) || 0 
+                      }));
+                    }}
+                    placeholder="0"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      IGV (%)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value={formData.impuestos}
-                      onChange={(e) => setFormData(prev => ({ ...prev, impuestos: parseFloat(e.target.value) || 0 }))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    />
-                  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    IVA (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={formData.impuestos}
+                    onChange={(e) => setFormData(prev => ({ ...prev, impuestos: parseFloat(e.target.value) || 0 }))
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
                 </div>
               </div>
+            </div>
 
-              {/* Notas */}
-              <div>
-                <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4">
-                  Observaciones
-                </h3>
-                
-                <textarea
-                  value={formData.notas}
-                  onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                  placeholder="Notas adicionales sobre la venta..."
-                />
-              </div>
+            {/* Observaciones - Now in its own row */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <h3 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2 mb-4">
+                Observaciones
+              </h3>
+              
+              <textarea
+                value={formData.notas}
+                onChange={(e) => setFormData(prev => ({ ...prev, notas: e.target.value }))}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                placeholder="Notas adicionales sobre la venta..."
+              />
             </div>
 
             {/* Espaciado adicional */}
@@ -620,7 +796,7 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                 <p className="text-lg font-bold text-orange-600">-{formatPrecio(calcularDescuentoGeneral())}</p>
               </div>
               <div className="text-center">
-                <p className="text-gray-600">IGV ({formData.impuestos}%)</p>
+                <p className="text-gray-600">IVA ({formData.impuestos}%)</p>
                 <p className="text-lg font-bold text-blue-600">+{formatPrecio(calcularImpuestos())}</p>
               </div>
               <div className="text-center">
@@ -642,29 +818,15 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
             <button
               type="button"
               onClick={onClose}
-              className="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              className="w-full sm:w-auto px-6 py-3 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
             >
               Cancelar
             </button>
             
-            {!venta && (
-              <button
-                onClick={(e) => {
-                  setFormData(prev => ({ ...prev, estado: 'pendiente' }));
-                  handleSubmit(e);
-                }}
-                disabled={isLoading}
-                className="w-full sm:w-auto px-6 py-3 border border-yellow-300 rounded-lg shadow-sm text-sm font-medium text-yellow-700 bg-yellow-50 hover:bg-yellow-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors flex items-center justify-center"
-              >
-                <Clock size={16} className="mr-2" />
-                Guardar como Pendiente
-              </button>
-            )}
-            
             <button
               onClick={handleSubmit}
               disabled={isLoading}
-              className="w-full sm:w-auto px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-6 py-3 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -672,10 +834,7 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                   Guardando...
                 </>
               ) : (
-                <>
-                  <Save size={16} className="mr-2" />
-                  {venta ? 'Guardar Cambios' : 'Crear Venta'}
-                </>
+                <><Save size={16} className="mr-2" />Crear Venta</>
               )}
             </button>
           </div>

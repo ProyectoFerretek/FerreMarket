@@ -1,62 +1,108 @@
 import React from 'react';
-import { estadisticasVentas } from '../../data/mockData';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatPrecio } from '../../utils/formatters';
+import { LineChart, TrendingUp, DollarSign } from 'lucide-react';
 
-const GraficoVentas: React.FC = () => {
-  // Encontrar el valor máximo para calcular porcentajes
-  const maxVenta = Math.max(...estadisticasVentas.map(item => item.ventas));
+interface GraficoVentasProps {
+  datos: { fecha: string; ventas: number }[];
+  isLoading?: boolean;
+}
 
-  // Formatear fechas para mostrar solo el día
-  const formatearDia = (fechaStr: string) => {
-    const fecha = new Date(fechaStr);
-    return fecha.getDate();
+const GraficoVentas: React.FC<GraficoVentasProps> = ({ datos, isLoading = false }) => {
+  // Formatear las fechas para mostrar solo los últimos 7 días
+  const datosFormateados = datos.slice(-7).map(item => ({
+    ...item,
+    fecha: new Date(item.fecha).toLocaleDateString('es-ES', { 
+      day: 'numeric',
+      month: 'short'
+    })
+  }));
+
+  const totalVentas7Dias = datosFormateados.reduce((sum, item) => sum + item.ventas, 0);
+  const promedioDiario = datosFormateados.length > 0 
+    ? totalVentas7Dias / datosFormateados.length 
+    : 0;
+
+  // Personalizar el tooltip
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border border-gray-200 shadow-md rounded-md">
+          <p className="font-medium text-gray-900">{label}</p>
+          <p className="text-orange-500 font-bold">
+            {formatPrecio(payload[0].value)}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-6 space-y-2 sm:space-y-0">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-800">Ventas Diarias</h3>
-        <select className="text-xs sm:text-sm border-gray-300 rounded-md shadow-sm focus:border-orange-500 focus:ring focus:ring-orange-200 w-full sm:w-auto">
-          <option>Últimos 7 días</option>
-          <option>Últimos 30 días</option>
-          <option>Este mes</option>
-        </select>
-      </div>
-
-      <div className="flex items-end space-x-1 sm:space-x-2 h-48 sm:h-64 overflow-x-auto">
-        {estadisticasVentas.map((item, index) => {
-          const porcentajeAltura = (item.ventas / maxVenta) * 100;
-          const esDiaActual = index === estadisticasVentas.length - 1;
-
-          return (
-            <div key={item.fecha} className="flex flex-col items-center flex-1 min-w-0 group">
-              <div
-                className={`relative w-full max-w-[32px] sm:max-w-[40px] rounded-t-md transition-all duration-300 ${esDiaActual ? 'bg-orange-500' : 'bg-blue-700'} hover:opacity-80`}
-                style={{ height: `${Math.max(porcentajeAltura, 5)}%` }}
-              >
-                <div className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
-                  {formatPrecio(item.ventas)}
-                </div>
-              </div>
-              <div className="text-xs text-gray-500 mt-2 text-center">
-                {formatearDia(item.fecha)}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-4 space-y-2 sm:space-y-0">
-        <div className="text-center sm:text-left">
-          <span className="text-xs sm:text-sm font-semibold text-gray-700">Total periodo:</span>
-          <span className="ml-2 text-xs sm:text-sm text-gray-900">
-            {formatPrecio(estadisticasVentas.reduce((acc, item) => acc + item.ventas, 0))}
-          </span>
+    <div className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900 flex items-center">
+            <LineChart size={20} className="mr-2 text-blue-600" />
+            Ventas de los últimos 7 días
+          </h3>
+          <p className="text-gray-500 text-sm mt-1">
+            Análisis de ventas diarias
+          </p>
         </div>
-        <button className="text-xs sm:text-sm text-orange-600 hover:text-orange-700 transition-colors">
-          Ver reporte completo →
-        </button>
+        <div className="flex flex-col items-end">
+          <div className="flex items-center text-sm text-gray-500">
+            <DollarSign size={16} className="text-green-500 mr-1" />
+            Total: <span className="font-semibold text-gray-900 ml-1">{formatPrecio(totalVentas7Dias)}</span>
+          </div>
+          <div className="flex items-center text-sm text-gray-500 mt-1">
+            <TrendingUp size={16} className="text-blue-500 mr-1" />
+            Promedio: <span className="font-semibold text-gray-900 ml-1">{formatPrecio(promedioDiario)}</span>
+          </div>
+        </div>
       </div>
+
+      {isLoading ? (
+        <div className="h-64 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+        </div>
+      ) : datos.length === 0 ? (
+        <div className="h-64 flex items-center justify-center">
+          <p className="text-gray-500">No hay datos disponibles</p>
+        </div>
+      ) : (
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={datosFormateados}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+              <XAxis 
+                dataKey="fecha" 
+                axisLine={false}
+                tickLine={false}
+                tickMargin={8}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+              />
+              <YAxis 
+                axisLine={false}
+                tickLine={false}
+                tickMargin={8}
+                tick={{ fontSize: 12, fill: '#6b7280' }}
+                tickFormatter={(value) => `$${value / 1000}k`}
+              />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar 
+                dataKey="ventas" 
+                fill="#f97316" 
+                radius={[4, 4, 0, 0]}
+                maxBarSize={60}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      )}
     </div>
   );
 };

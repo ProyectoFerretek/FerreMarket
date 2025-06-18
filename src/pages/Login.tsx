@@ -102,16 +102,6 @@ const Login: React.FC = () => {
       // Simulación de autenticación
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      // Simulación de fallo para demostrar el sistema de bloqueo
-      // if (formData.email !== 'admin@ferremarket.com' || formData.password !== 'Admin123!') {
-      //   throw new Error('Credenciales incorrectas');
-      // }
-
-      // Éxito - redirigir al dashboard
-      console.log('Login exitoso:', formData);
-      // iniciarSesion(formData.email, formData.password)
-      // Aquí iría la redirección: navigate('/dashboard');
-      
     } catch (error) {
       const newAttempts = loginAttempts + 1;
       setLoginAttempts(newAttempts);
