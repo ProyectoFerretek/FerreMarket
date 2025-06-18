@@ -42,7 +42,6 @@ const Ventas: React.FC = () => {
 
   // Add a function to refresh all data
   const refreshData = useCallback(async () => {
-    console.log("Refreshing ventas data...");
     await Promise.all([
       cargarVentas(),
       cargarProductos(),
@@ -57,7 +56,6 @@ const Ventas: React.FC = () => {
     
     // Set up a focus event listener to refresh data when tab becomes active
     const handleFocus = () => {
-      console.log("Window focused, refreshing data...");
       refreshData();
     };
     
@@ -119,7 +117,6 @@ const Ventas: React.FC = () => {
 
   // Calcular KPIs y estadísticas
   const estadisticas = useMemo(() => {
-    console.log("Recalculating estadisticas with", ventas.length, "ventas");
     const hoy = new Date().toISOString().split('T')[0];
     const ayer = new Date();
     ayer.setDate(ayer.getDate() - 1);
@@ -770,13 +767,6 @@ const Ventas: React.FC = () => {
                 <FileSpreadsheet size={14} className="mr-1" />
                 Excel
               </button>
-              <button
-                onClick={() => exportarSeleccion('csv')}
-                className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 flex items-center text-sm transition-colors"
-              >
-                <FileDown size={14} className="mr-1" />
-                CSV
-              </button>
             </div>
           </div>
         </div>
@@ -1070,7 +1060,6 @@ const Ventas: React.FC = () => {
           titulo="Eliminar Venta"
           mensaje={`¿Estás seguro de que deseas eliminar la venta #${ventaSeleccionada?.id}? Esta acción no se puede deshacer y se registrará en el historial del sistema.`}
           onConfirm={() => {
-            console.log('Eliminando venta:', ventaSeleccionada);
             setConfirmOpen(false);
             setVentaSeleccionada(null);
           }}

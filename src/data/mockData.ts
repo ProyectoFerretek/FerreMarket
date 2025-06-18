@@ -360,8 +360,6 @@ export const calcularValorInventario = async () => {
         totalValor += valorProducto;
     }
 
-    console.log("Valor total del inventario:", totalValor);
-
     return totalValor;
 };
 
@@ -379,8 +377,6 @@ export const calcularStockTotal = async () => {
     for (const producto of productos) {
         totalProductos += producto.stock || 0;
     }
-
-    console.log("Total de productos en stock:", totalProductos);
 
     return totalProductos;
 };
@@ -401,8 +397,6 @@ export const calcularProductosPorCategoria = async (categoriaId: string): Promis
     }
 
     const cantidadProductos = productos ? productos.length : 0;
-    console.log(`Cantidad de productos en la categoría ${categoriaId}:`, cantidadProductos);
-    
     return cantidadProductos;
 };
 
@@ -441,8 +435,6 @@ export const agregarProducto = async (producto: Producto) => {
             console.error("Error al agregar producto:", error);
             throw new Error(`Error al agregar producto: ${error.message}`);
         }
-        
-        console.log("¡Producto agregado correctamente!");
     } catch (err) {
         console.error("Error en la operación:", err);
         throw err;
@@ -468,8 +460,6 @@ export const actualizarProducto = async (id: string, producto: UpdateProducto) =
         console.error("Error al actualizar producto:", error);
         throw new Error(`Error al actualizar producto: ${error.message}`);
     }
-
-    console.log("¡Producto actualizado correctamente!");
 };
 
 export const eliminarProducto = async (id: string) => {
@@ -482,8 +472,6 @@ export const eliminarProducto = async (id: string) => {
         console.error("Error al eliminar producto:", error);
         throw new Error(`Error al eliminar producto: ${error.message}`);
     }
-
-    console.log("¡Producto eliminado correctamente!");
 };
 
 export const obtenerProductos = async (): Promise<Producto[]> => {
@@ -600,7 +588,6 @@ export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIn
             throw new Error(`Error al agregar cliente: ${error.message}`);
         }
 
-        console.log("¡Cliente agregado correctamente!");
         return cliente;
     } catch (err) {
         console.error("Error en la operación:", err);
@@ -657,7 +644,6 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
             }
         }
 
-        console.log("Clientes obtenidos correctamente:", clientesList);        
         return clientesList;
     } catch (error) {
         console.error("Error al obtener clientes:", error);
@@ -678,7 +664,6 @@ export const eliminarCliente = async (clientId: string) => {
         throw new Error(`Error al eliminar cliente: ${error.message}`);
     }
 
-    console.log("¡Cliente eliminado correctamente!");
     return true;
 }
 
@@ -695,14 +680,10 @@ export const obtenerClientesRegistrados = async () => {
     }
 
     totalClientes += clientes ? clientes.length : 0;
-
-    console.log("Total de clientes registrados:", totalClientes);
     return totalClientes;
 }
 
 export const obtenerTotalComprasClientePorId = async (clienteId: string | number): Promise<number> => {
-    console.log(`Calculando total de compras para el cliente con ID: ${clienteId}`);
-
     if (clienteId === undefined || clienteId === null || 
         (typeof clienteId === 'string' && clienteId.trim() === '')) {
         throw new Error('clienteId must be a non-empty value');
@@ -718,9 +699,7 @@ export const obtenerTotalComprasClientePorId = async (clienteId: string | number
         throw new Error(`Error fetching purchases for client: ${error.message}`);
     }
 
-    const totalCompras = ventas.length
-    console.log(`Total purchases for client ${clienteId}:`, totalCompras);
-    
+    const totalCompras = ventas.length    
     return totalCompras;
 }
 
@@ -735,8 +714,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
         metodo_pago: venta.metodoPago,
         estado: venta.estado || "pendiente", // Asignar estado por defecto si no se proporciona
     }
-
-    console.log("Datos de la venta a agregar:", ventaData);
 
     const { data, error } = await supabase
     .from("ventas")
@@ -758,8 +735,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
             cantidad: producto.cantidad,
             precio_unitario: producto.precioUnitario,
         };
-
-        console.log("Datos del producto a agregar a la venta:", productoData);
 
         const { error: productoError } = await supabase
         .from("ventas_productos")
@@ -810,7 +785,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
         throw new Error(`Error al actualizar la última compra del cliente: ${updateClienteError.message}`);
     }
 
-    console.log("¡Venta agregada correctamente!", ventaData);
     return true; 
 }
 

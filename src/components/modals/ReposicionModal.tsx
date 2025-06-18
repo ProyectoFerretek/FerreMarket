@@ -84,7 +84,6 @@ const ReposicionModal: React.FC<ReposicionModalProps> = ({ producto, onClose }) 
                 notas: formData.notas
             };
 
-            console.log('Orden de reposición generada:', ordenData);
             setOrdenGenerada(true);
 
             // Cerrar modal después de 2 segundos

@@ -157,16 +157,10 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
         clientData['giro'] = formData.giro || 'Sin giro registrado';
       }
 
-      console.log('Datos del cliente a guardar:', clientData);
-      
       if (cliente) {
-        // EDITAR cliente existente
         await actualizarCliente(cliente.id, clientData);
-        console.log('Cliente actualizado con ID:', cliente.id);
       } else {
-        // CREAR nuevo cliente
         await agregarCliente(tipoCliente, clientData);
-        console.log('Nuevo cliente creado');
       }
 
       onClose();

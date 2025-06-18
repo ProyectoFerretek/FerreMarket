@@ -198,9 +198,6 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Add debugging to see the actual state value before submission
-    console.log("Estado al guardar:", formData.estado);
-    
     if (!validarFormulario()) {
       return;
     }
@@ -225,7 +222,6 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
         })),
       }
 
-      console.log('Datos de la venta a guardar:', ventaData);
       await agregarVenta(ventaData);
 
       onClose();
@@ -460,7 +456,6 @@ const VentaModal: React.FC<VentaModalProps> = ({ venta, onClose }) => {
                       value={formData.estado}
                       onChange={(e) => {
                         setFormData(prev => ({ ...prev, estado: e.target.value }))
-                        console.log("Estado seleccionado:", e.target.value);
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
