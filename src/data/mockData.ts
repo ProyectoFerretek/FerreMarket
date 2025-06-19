@@ -1,4 +1,4 @@
-import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, ClienteEmpresarial, ClienteIndividual, VentaFormulario } from "../types";
+import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, VentaFormulario } from "../types";
 import { DateTime } from "luxon";
 import supabase from "../lib/supabase/Supabase";
 
@@ -15,187 +15,18 @@ export const categorias: Categoria[] = [
 
 // Productos destacados
 export const productos: Producto[] = [
-    {
-        id: "1",
-        nombre: "Taladro Inalámbrico 18V",
-        descripcion:
-            "Taladro recargable con batería de larga duración y maletín",
-        precio: 59990,
-        categoria: "1",
-        stock: 0,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "2",
-        nombre: "Set de Destornilladores (10 pcs)",
-        descripcion: "Juego de destornilladores precisión diferentes tamaños",
-        precio: 12990,
-        categoria: "1",
-        stock: 23,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "3",
-        nombre: "Pintura Látex Blanco 1GL",
-        descripcion: "Pintura lavable de alta cobertura para interiores",
-        precio: 18990,
-        categoria: "2",
-        stock: 42,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
-    {
-        id: "4",
-        nombre: 'Sierra Circular 7 1/4"',
-        descripcion: "Sierra eléctrica para cortes precisos en madera",
-        precio: 49990,
-        categoria: "1",
-        stock: 8,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "5",
-        nombre: "Cable Eléctrico 12AWG (10m)",
-        descripcion: "Cable flexible para instalaciones domésticas",
-        precio: 8990,
-        categoria: "3",
-        stock: 2,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
-    {
-        id: "6",
-        nombre: 'Llave Ajustable 10"',
-        descripcion: "Llave de alta resistencia para múltiples usos",
-        precio: 7990,
-        categoria: "1",
-        stock: 19,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
-    {
-        id: "7",
-        nombre: "Manguera de Jardín 15m",
-        descripcion: "Manguera reforzada con conectores incluidos",
-        precio: 15990,
-        categoria: "6",
-        stock: 12,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "8",
-        nombre: "Cemento 25kg",
-        descripcion: "Cemento de alta resistencia para obras",
-        precio: 6990,
-        categoria: "5",
-        stock: 34,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
 ];
 
 // Clientes recientes
 export const clientes: Cliente[] = [
-    {
-        id: "1",
-        nombre: "Juan Pérez",
-        email: "juan.perez@gmail.com",
-        telefono: "+56 9 1234 5678",
-        direccion: "Av. Providencia 1234, Santiago",
-        compras: 8,
-        ultimaCompra: "2025-04-15",
-    },
-    {
-        id: "2",
-        nombre: "María González",
-        email: "maria.gon@outlook.com",
-        telefono: "+56 9 8765 4321",
-        direccion: "Los Leones 567, Providencia",
-        compras: 12,
-        ultimaCompra: "2025-04-18",
-    },
-    {
-        id: "3",
-        nombre: "Carlos Rodríguez",
-        email: "crodriguez@empresa.cl",
-        telefono: "+56 9 5555 7777",
-        direccion: "Av. Las Condes 789, Las Condes",
-        compras: 5,
-        ultimaCompra: "2025-04-10",
-    },
-    {
-        id: "4",
-        nombre: "Ana Silva",
-        email: "ana.silva@gmail.com",
-        telefono: "+56 9 3333 2222",
-        direccion: "Irarrázaval 890, Ñuñoa",
-        compras: 3,
-        ultimaCompra: "2025-04-16",
-    },
 ];
 
 // Ventas recientes
 export const ventas: Venta[] = [
-    {
-        id: "1",
-        fecha: "2025-04-19T14:35:00",
-        cliente: "1",
-        productos: [
-            { id: "1", cantidad: 1, precioUnitario: 59990 },
-            { id: "5", cantidad: 2, precioUnitario: 8990 },
-        ],
-        total: 77970,
-        metodoPago: "Tarjeta de crédito",
-        estado: "completada",
-    },
-    {
-        id: "2",
-        fecha: "2025-04-18T10:15:00",
-        cliente: "2",
-        productos: [
-            { id: "3", cantidad: 3, precioUnitario: 18990 },
-            { id: "8", cantidad: 5, precioUnitario: 6990 },
-        ],
-        total: 91920,
-        metodoPago: "Efectivo",
-        estado: "completada",
-    },
-    {
-        id: "3",
-        fecha: "2025-04-18T16:20:00",
-        cliente: "4",
-        productos: [
-            { id: "7", cantidad: 1, precioUnitario: 15990 },
-            { id: "2", cantidad: 1, precioUnitario: 12990 },
-        ],
-        total: 28980,
-        metodoPago: "Tarjeta de débito",
-        estado: "completada",
-    },
-    {
-        id: "4",
-        fecha: "2025-04-19T09:45:00",
-        cliente: "3",
-        productos: [{ id: "4", cantidad: 1, precioUnitario: 49990 }],
-        total: 49990,
-        metodoPago: "Transferencia",
-        estado: "pendiente",
-    },
 ];
 
 // Estadísticas de ventas últimos 7 días
 export const estadisticasVentas: EstadisticaVenta[] = [
-    { fecha: "2025-04-13", ventas: 245000 },
-    { fecha: "2025-04-14", ventas: 312000 },
-    { fecha: "2025-04-15", ventas: 287000 },
-    { fecha: "2025-04-16", ventas: 356000 },
-    { fecha: "2025-04-17", ventas: 298000 },
-    { fecha: "2025-04-18", ventas: 421000 },
-    { fecha: "2025-04-19", ventas: 352000 },
 ];
 
 // Notificaciones
@@ -205,27 +36,6 @@ export const notificaciones: Notificacion[] = [
         mensaje: "Stock bajo de Taladro Inalámbrico 18V (5 unidades)",
         tipo: "alerta",
         fecha: "2025-04-19T08:30:00",
-        leida: false,
-    },
-    {
-        id: "2",
-        mensaje: "Nueva orden #4 pendiente de entrega",
-        tipo: "info",
-        fecha: "2025-04-19T09:45:00",
-        leida: false,
-    },
-    {
-        id: "3",
-        mensaje: "Actualización de precios completada",
-        tipo: "info",
-        fecha: "2025-04-18T17:15:00",
-        leida: true,
-    },
-    {
-        id: "4",
-        mensaje: "Error al procesar pago de orden #5",
-        tipo: "error",
-        fecha: "2025-04-19T11:20:00",
         leida: false,
     },
 ];
@@ -436,32 +246,32 @@ export const obtenerProductosDestacados = async (limit: number): Promise<Product
 
 // CLIENTES
 
-export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIndividual | ClienteEmpresarial) => {
+export const agregarCliente = async (tipoCliente: string, dataCliente: Cliente) => {
     let userData: any = {};
 
     if (tipoCliente === "individual") {
         userData = {
             nombre: dataCliente.nombre,
-            apellidos: (dataCliente as ClienteIndividual).apellidos || "",
+            apellidos: dataCliente.apellidos || "",
             email: dataCliente.email,
             telefono: dataCliente.telefono,
-            direccion: (dataCliente as ClienteIndividual).direccion || "",
-            run: (dataCliente as ClienteIndividual).run,
+            direccion: dataCliente.direccion || "",
+            run: dataCliente.run,
             estado: "activo",
-            notas: (dataCliente as ClienteIndividual).notas || "",
+            notas: dataCliente.notas || "",
             tipo: "individual",
         };
     } else if (tipoCliente === "empresa") {
         userData = {
-            razonsocial: (dataCliente as ClienteEmpresarial).razonSocial,
-            nombre: (dataCliente as ClienteEmpresarial).nombreComercial || "",
+            razonsocial: dataCliente.razonSocial,
+            nombre: dataCliente.nombreComercial || "",
             email: dataCliente.email,
             telefono: dataCliente.telefono,
-            direccion: (dataCliente as ClienteEmpresarial).direccion || "",
-            rut: (dataCliente as ClienteEmpresarial).rut || "",
-            giro: (dataCliente as ClienteEmpresarial).giro || "",
+            direccion: dataCliente.direccion || "",
+            rut: dataCliente.rut || "",
+            giro: dataCliente.giro || "",
             estado: "activo",
-            notas: (dataCliente as ClienteEmpresarial).notas || "",
+            notas: dataCliente.notas || "",
             tipo: "empresarial",
         };
     }
@@ -514,7 +324,8 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                 } else if (cliente.tipo === "empresarial") {
                     clientesList.push({
                         id: cliente.id,
-                        nombre: cliente.razonsocial,
+                        nombre: cliente.nombre,
+                        razonSocial: cliente.razonsocial || "",
                         email: cliente.email,
                         telefono: cliente.telefono,
                         direccion: cliente.direccion || "",
@@ -539,7 +350,7 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
     }
 }
 
-export const actualizarCliente = async (id: string, cliente: Cliente) => {}
+export const actualizarCliente = async () => {}
 
 export const eliminarCliente = async (clientId: string) => {
     const { error } = await supabase
@@ -777,11 +588,9 @@ export const obtenerUsuarios = async (): Promise<Usuario[]> => {
     return usuariosList;
 };
 
-export const obtenerUsuarioPorId = async (id: string) => {}
-
-export const agregarUsuario = async (usuario: UsuarioFirebase) => {};
-
-export const eliminarUsuario = async (id: string) => {};
+export const obtenerUsuarioPorId = async () => {}
+export const agregarUsuario = async () => {};
+export const eliminarUsuario = async () => {};
 
 function base64ToFile(base64: string, filename: string, mimeType: string): File {
   const byteString = atob(base64.split(',')[1]);
