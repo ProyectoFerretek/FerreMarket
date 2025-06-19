@@ -20,41 +20,25 @@ export interface UpdateProducto {
 }
 
 export interface Cliente {
-  id: string;
-  tipo: 'individual' | 'empresarial';
-  datos: ClienteIndividual | ClienteEmpresarial;
+  id?: string;
   estado: 'activo' | 'inactivo';
-  fechaCreacion: string;
-  ultimaModificacion: string;
+  fechaCreacion?: string;
+  ultimaModificacion?: string;
   notas?: string;
   compras?: number;
   ultimaCompra?: string;
   tipoCliente: string;
-}
 
-export interface ClienteIndividual {
-  nombre: string;
+  nombre?: string;
   apellidos?: string;
-  email: string;
-  telefono: string;
+  email?: string;
+  telefono?: string;
   direccion?: string;
-  run: string;
-  estado: 'activo' | 'inactivo';
-  notas?: string;
-  ultimaCompra?: string;
-}
-
-export interface ClienteEmpresarial {
-  razonSocial: string; // NOMBRE LEGAL DE LA EMPRESA
-  nombreComercial?: string; // NOMBRE COMERCIAL DE LA EMPRESA
-  email: string;
-  telefono: string;
-  direccion?: string;
-  rut?: string;
-  giro?: string;
-  estado: 'activo' | 'inactivo';
-  notas?: string;
-  ultimaCompra?: string;
+  run?: string; // RUN para clientes individuales
+  rut?: string; // RUT para clientes empresariales
+  giro?: string; // Giro para clientes empresariales
+  nombreComercial?: string; // Nombre comercial para clientes empresariales
+  razonSocial?: string;
 }
 
 export interface Venta {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { X, AlertCircle, User, Building2, Mail, Phone, MapPin, FileText, Globe, MessageSquare, StickyNote, CheckCircle } from 'lucide-react';
-import { agregarCliente, actualizarCliente } from '../../data/mockData';
-import { ClienteFormulario } from '../../types';
+import { X, AlertCircle, User, Building2, Mail, Phone, MapPin, StickyNote, CheckCircle } from 'lucide-react';
+import { agregarCliente } from '../../data/mockData';
+import { Cliente } from '../../types';
 
 interface ClienteModalProps {
   cliente?: any;
@@ -137,8 +137,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
       // Simular delay de API
       await new Promise(resolve => setTimeout(resolve, 1000));
       
-      const clientData: ClienteFormulario = {
-        nombre: formData.nombre, 
+      const clientData: Cliente = {
+        nombre: formData.nombre,
         email: formData.email,
         telefono: formData.telefono,
         direccion: formData.direccion || 'Sin dirección registrada.',
@@ -158,7 +158,8 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
       }
 
       if (cliente) {
-        await actualizarCliente(cliente.id, clientData);
+        // LOGICA PARA ACTUALIZAR EL CLIENTE
+        console.log('Actualizando cliente:', cliente.id, clientData);
       } else {
         await agregarCliente(tipoCliente, clientData);
       }
@@ -383,7 +384,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                     </label>
                     <input
                       type="text"
-                      value={formData.nombreComercial}
+                      value={formData.nombre}
                       onChange={(e) => setFormData(prev => ({ ...prev, nombreComercial: e.target.value }))}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                       placeholder="Nombre comercial de la empresa"
@@ -509,7 +510,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                         type="radio"
                         value="activo"
                         checked={formData.estado === 'activo'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value as 'activo' | 'inactivo' }))}
                         className="form-radio h-4 w-4 text-green-600 focus:ring-green-500"
                       />
                       <span className="ml-2 text-sm text-gray-700 flex items-center">
@@ -522,7 +523,7 @@ const ClienteModal: React.FC<ClienteModalProps> = ({ cliente, onClose }) => {
                         type="radio"
                         value="inactivo"
                         checked={formData.estado === 'inactivo'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, estado: e.target.value as 'activo' | 'inactivo' }))}
                         className="form-radio h-4 w-4 text-red-600 focus:ring-red-500"
                       />
                       <span className="ml-2 text-sm text-gray-700 flex items-center">
