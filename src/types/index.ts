@@ -26,6 +26,7 @@ export interface Cliente {
   ultimaModificacion?: string;
   notas?: string;
   compras?: number;
+  totalCompras?: number;
   ultimaCompra?: string;
   tipoCliente: string;
 

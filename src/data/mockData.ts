@@ -315,7 +315,8 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                         run: cliente.run || "",
                         estado: cliente.estado || "activo",
                         notas: cliente.notas || "",
-                        compras: await obtenerTotalComprasClientePorId(cliente.id),
+                        compras: await obtenerCantidadComprasClientePorId(cliente.id),
+                        totalCompras: await obtenerTotalComprasClientePorId(cliente.id),
                         ultimaCompra: cliente.ultimacompra || "Sin fecha registrada.",
                         tipoCliente: "individual",
                         fechaCreacion: cliente.fechaCreacion || DateTime.now().setZone("America/Santiago").toISO(),
@@ -333,7 +334,8 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                         giro: cliente.giro || "",
                         estado: cliente.estado || "activo",
                         notas: cliente.notas || "",
-                        compras: await obtenerTotalComprasClientePorId(cliente.id),
+                        compras: await obtenerCantidadComprasClientePorId(cliente.id),
+                        totalCompras: await obtenerTotalComprasClientePorId(cliente.id),
                         ultimaCompra: cliente.ultimacompra || 'Sin fecha registrada.',
                         tipoCliente: "empresa",
                         fechaCreacion: cliente.fechaCreacion || DateTime.now().setZone("America/Santiago").toISO(),
@@ -382,7 +384,7 @@ export const obtenerClientesRegistrados = async () => {
     return totalClientes;
 }
 
-export const obtenerTotalComprasClientePorId = async (clienteId: string | number): Promise<number> => {
+export const obtenerCantidadComprasClientePorId = async (clienteId: string | number): Promise<number> => {
     if (clienteId === undefined || clienteId === null || 
         (typeof clienteId === 'string' && clienteId.trim() === '')) {
         throw new Error('clienteId must be a non-empty value');
@@ -398,7 +400,40 @@ export const obtenerTotalComprasClientePorId = async (clienteId: string | number
         throw new Error(`Error fetching purchases for client: ${error.message}`);
     }
 
-    const totalCompras = ventas.length    
+    
+    // SUMAMOS EL TOTAL DE LAS COMPRAS DEL CLIENTE
+    if (!ventas || ventas.length === 0) {
+        return 0; // Si no hay compras, retornamos 0
+    }
+
+    // Sumamos los totales de las compras del cliente
+    const totalCompras = ventas.length;
+    return totalCompras;
+}
+
+export const obtenerTotalComprasClientePorId = async (clienteId: string | number): Promise<number> => {
+    if (clienteId === undefined || clienteId === null || 
+        (typeof clienteId === 'string' && clienteId.trim() === '')) {
+        throw new Error('clienteId must be a non-empty value');
+    }
+
+    const { data: ventas, error } = await supabase
+    .from("ventas")
+    .select("total")
+    .eq("cliente", Number(clienteId));
+
+    if (error) {
+        console.error(`Error fetching total purchases for client ${clienteId}:`, error);
+        throw new Error(`Error fetching total purchases for client: ${error.message}`);
+    }
+
+    // SUMAMOS EL TOTAL DE LAS COMPRAS DEL CLIENTE
+    if (!ventas || ventas.length === 0) {
+        return 0; // Si no hay compras, retornamos 0
+    }
+
+    // Sumamos los totales de las compras del cliente
+    const totalCompras = ventas.reduce((acc, venta) => acc + (venta.total || 0), 0);
     return totalCompras;
 }
 
