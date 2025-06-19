@@ -13,6 +13,7 @@ import GraficoVentas from '../components/dashboard/GraficoVentas';
 import ProductosDestacados from '../components/dashboard/ProductosDestacados';
 import VentasRecientes from '../components/dashboard/VentasRecientes';
 import CategoriasProductos from '../components/dashboard/CategoriasProductos';
+import { DateTime } from 'luxon';
 
 const Dashboard: React.FC = () => {
   // Estado para estadísticas
@@ -97,19 +98,8 @@ const Dashboard: React.FC = () => {
     }
   }, []);
 
-  // Cargar datos al montar el componente y cuando se vuelve a enfocar la ventana
   useEffect(() => {
     cargarDatos();
-    
-    // Actualizar datos cuando la ventana obtiene foco (por ejemplo, al volver de otra página)
-    // const handleFocus = () => {
-    //   cargarDatos();
-    // };
-    
-    // window.addEventListener('focus', handleFocus);
-    // return () => {
-    //   window.removeEventListener('focus', handleFocus);
-    // };
   }, [cargarDatos]);
 
   return (
