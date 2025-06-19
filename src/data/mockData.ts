@@ -1,36 +1,7 @@
-import {
-    Producto,
-    Cliente,
-    Venta,
-    EstadisticaVenta,
-    Categoria,
-    Notificacion,
-    Usuario,
-    UsuarioFirebase,
-    UpdateProducto,
-    ClienteEmpresarial,
-    ClienteIndividual,
-    VentaFormulario,
-} from "../types";
-
-// import { dbFirestore } from "../lib/firebase/Firebase";
-// import {
-//     collection,
-//     addDoc,
-//     getDocs,
-//     getDoc,
-//     doc,
-//     setDoc,
-//     updateDoc,
-//     deleteDoc,
-//     onSnapshot,
-//     query,
-//     where,
-//     orderBy,
-// 	getCountFromServer,
-// } from "firebase/firestore";
-
+import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, ClienteEmpresarial, ClienteIndividual, VentaFormulario } from "../types";
+import { DateTime } from "luxon";
 import supabase from "../lib/supabase/Supabase";
+
 
 // Categorías de productos
 export const categorias: Categoria[] = [
@@ -258,89 +229,6 @@ export const notificaciones: Notificacion[] = [
         leida: false,
     },
 ];
-
-// Usuarios del sistema
-// export const usuarios: Usuario[] = [
-//   {
-//     id: '1',
-//     nombre: 'Administrador Principal',
-//     email: 'admin@ferremarket.com',
-//     rol: 'admin',
-//     estado: 'activo',
-//     fechaCreacion: '2024-01-15T10:00:00',
-//     ultimaModificacion: '2025-04-19T14:30:00',
-//     ultimoAcceso: '2025-04-19T15:45:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '2',
-//     nombre: 'Carlos Mendoza',
-//     email: 'carlos.mendoza@ferremarket.com',
-//     rol: 'admin',
-//     estado: 'activo',
-//     fechaCreacion: '2024-02-20T09:15:00',x
-//     ultimaModificacion: '2025-04-18T16:20:00',
-//     ultimoAcceso: '2025-04-19T08:30:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '3',
-//     nombre: 'Ana Rodríguez',
-//     email: 'ana.rodriguez@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'activo',
-//     fechaCreacion: '2024-03-10T11:30:00',
-//     ultimaModificacion: '2025-04-17T10:45:00',
-//     ultimoAcceso: '2025-04-19T12:15:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '4',
-//     nombre: 'Luis García',
-//     email: 'luis.garcia@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'activo',
-//     fechaCreacion: '2024-04-05T14:20:00',
-//     ultimaModificacion: '2025-04-16T09:30:00',
-//     ultimoAcceso: '2025-04-18T17:20:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '5',
-//     nombre: 'María Fernández',
-//     email: 'maria.fernandez@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'inactivo',
-//     fechaCreacion: '2024-01-30T16:45:00',
-//     ultimaModificacion: '2025-04-10T11:15:00',
-//     ultimoAcceso: '2025-04-10T11:15:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '6',
-//     nombre: 'Roberto Silva',
-//     email: 'roberto.silva@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'activo',
-//     fechaCreacion: '2024-05-12T13:10:00',
-//     ultimaModificacion: '2025-04-19T08:45:00',
-//     ultimoAcceso: '2025-04-19T14:20:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   }
-// ];
-
-// export const usuarios: Usuario[] = [];
-
-//   {
-//     id: '6',
-//     nombre: 'Llave Ajustable 10"',
-//     descripcion: 'Llave de alta resistencia para múltiples usos',
-//     precio: 7990,
-//     categoria: '1',
-//     stock: 19,
-//     imagen: 'src/assets/images/Taladro.webp',
-//     destacado: false
-//   },
 
 // DASHBOARD
 
@@ -620,8 +508,8 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                         compras: await obtenerTotalComprasClientePorId(cliente.id),
                         ultimaCompra: cliente.ultimacompra || "Sin fecha registrada.",
                         tipoCliente: "individual",
-                        fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
-                        ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                        fechaCreacion: cliente.fechaCreacion || DateTime.now().setZone("America/Santiago").toISO(),
+                        ultimaModificacion: cliente.ultimaModificacion || DateTime.now().setZone("America/Santiago").toISO(),
                     });
                 } else if (cliente.tipo === "empresarial") {
                     clientesList.push({
@@ -637,8 +525,8 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                         compras: await obtenerTotalComprasClientePorId(cliente.id),
                         ultimaCompra: cliente.ultimacompra || 'Sin fecha registrada.',
                         tipoCliente: "empresa",
-                        fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
-                        ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                        fechaCreacion: cliente.fechaCreacion || DateTime.now().setZone("America/Santiago").toISO(),
+                        ultimaModificacion: cliente.ultimaModificacion || DateTime.now().setZone("America/Santiago").toISO(),
                     });
                 }
             }
@@ -708,7 +596,7 @@ export const obtenerTotalComprasClientePorId = async (clienteId: string | number
 export const agregarVenta = async (venta: VentaFormulario) => {
     // AGREGAR DATOS INICIALES DE LA VENTA A LA BASE DE DATOS
     const ventaData = {
-        fecha: new Date().toISOString(),
+        fecha: DateTime.now().setZone("America/Santiago").toISO(),
         cliente: venta.cliente,
         total: venta.total,
         metodo_pago: venta.metodoPago,
@@ -730,7 +618,7 @@ export const agregarVenta = async (venta: VentaFormulario) => {
     // AGREGAR PRODUCTOS A LA VENTA
     for (const producto of venta.productos) {
         const productoData = {
-            venta_id: ventaId, // Usar el ID obtenido de la respuesta
+            venta_id: ventaId,
             producto_id: producto.id,
             cantidad: producto.cantidad,
             precio_unitario: producto.precioUnitario,
@@ -748,7 +636,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
 
     // ACTUALIZAR STOCK DE LOS PRODUCTOS VENDIDOS
     for (const producto of venta.productos) {
-        // Primero obtener el producto actual
         const { data: currentProduct, error: fetchError } = await supabase
             .from("productos")
             .select("stock")
@@ -760,7 +647,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
             throw new Error(`Error al obtener stock del producto: ${fetchError.message}`);
         }
         
-        // Luego actualizar con el nuevo stock
         const newStock = (currentProduct?.stock || 0) - producto.cantidad;
         const { error: stockError } = await supabase
             .from("productos")
@@ -774,10 +660,9 @@ export const agregarVenta = async (venta: VentaFormulario) => {
     }
 
     // ACTUALIZAR FECHA DE ULTIMA COMPRA DEL CLIENTE
-
     const { error: updateClienteError } = await supabase
     .from("clientes")
-    .update({ ultimacompra: new Date().toISOString() })
+    .update({ ultimacompra: DateTime.now().setZone("America/Santiago").toISO() })
     .eq("id", venta.cliente);
 
     if (updateClienteError) {
@@ -810,7 +695,6 @@ export const obtenerVentas = async (): Promise<Venta[]> => {
             throw new Error(`Error al obtener productos de ventas: ${productosError.message}`);
         }
 
-        // Mapear las ventas y sus productos
         for (const venta of ventas) {
             const productos = productosVentas.filter(p => p.venta_id === venta.id).map(p => ({
                 id: p.producto_id,
@@ -822,7 +706,7 @@ export const obtenerVentas = async (): Promise<Venta[]> => {
                 id: venta.id,
                 fecha: venta.fecha,
                 cliente: venta.cliente,
-                productos: productos, // Los productos se obtienen aquí
+                productos: productos,
                 total: venta.total,
                 metodoPago: venta.metodo_pago,
                 estado: venta.estado,
