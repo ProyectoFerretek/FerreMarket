@@ -47,7 +47,7 @@ export const formatFecha = (fechaIso: string, incluirHora: boolean = false): str
  * Devuelve el nombre del cliente basado en su ID
  */
 export const getNombreCliente = (clienteId: string, clientes: any[]): string => {
-  const cliente = clientes.find(c => c.id === clienteId);
+  const cliente = clientes.find(c => Number(c.id) === Number(clienteId));
   return cliente ? cliente.nombre : 'Cliente no encontrado';
 };
 
