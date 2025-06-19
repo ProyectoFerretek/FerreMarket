@@ -167,6 +167,8 @@ FerreMarket/
 - **PDF**: jsPDF, html2canvas
 - **Iconos**: Lucide React
 - **Fecha/Hora**: date-fns
+- **Base de Datos**: Supabase
+- **Autenticacion**: Auth0
 
 ## Personalización
 
