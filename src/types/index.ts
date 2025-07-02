@@ -103,6 +103,7 @@ export interface Usuario {
 }
 
 export interface UsuarioFormData {
+  id?: string; // Opcional para crear nuevos usuarios
   nombre: string;
   email: string;
   password: string;
