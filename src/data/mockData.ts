@@ -1,4 +1,4 @@
-import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, VentaFormulario } from "../types";
+import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, VentaFormulario, UsuarioFormData } from "../types";
 import { DateTime } from "luxon";
 import supabase from "../lib/supabase/Supabase";
 
@@ -620,12 +620,97 @@ export const obtenerVentasRecientes = async (cantidad: number): Promise<Venta[]>
 
 export const obtenerUsuarios = async (): Promise<Usuario[]> => {
     const usuariosList: Usuario[] = [];
-    return usuariosList;
+
+    try {
+        const { data: usuarios, error } = await supabase
+        .from("usuarios")
+        .select("*");
+
+        if (error) {
+            console.error("Error al obtener usuarios:", error);
+            throw new Error(`Error al obtener usuarios: ${error.message}`);
+        }
+
+        for (const usuario of usuarios) {
+            usuariosList.push({
+                id: usuario.id,
+                uid: usuario.uid,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                rol: usuario.rol || "usuario",
+                estado: usuario.estado || "activo",
+                fechaCreacion: usuario.fecha_creacion || DateTime.now().setZone("America/Santiago").toISO(),
+                ultimaModificacion: usuario.ultima_modificacion || DateTime.now().setZone("America/Santiago").toISO(),
+                ultimoAcceso: usuario.ultimo_acceso || DateTime.now().setZone("America/Santiago").toISO(),
+            });
+        }
+
+        return usuariosList;
+    } catch (error) {
+        console.error("Error al obtener usuarios:", error);
+        throw new Error(`Error al obtener usuarios: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 };
 
 export const obtenerUsuarioPorId = async () => {}
-export const agregarUsuario = async () => {};
-export const eliminarUsuario = async () => {};
+export const agregarUsuario = async (NuevoUsuario: { uid: string; nombre: string; email: string; rol: "admin" | "usuario"; estado: "activo" | "inactivo"; fecha_creacion: string; ultima_modificacion: string; ultimo_acceso: string; }) => {
+    try {
+        const { data, error } = await supabase
+        .from("usuarios")
+        .insert([NuevoUsuario])
+        .select();
+
+        if (error) {
+            console.error("Error al agregar usuario:", error);
+            throw new Error(`Error al agregar usuario: ${error.message}`);
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+};
+
+export const actualizarUsuario = async (userId: string, userData: { nombre: string; email: string; rol: "admin" | "usuario"; estado: "activo" | "inactivo"; }) => {
+    try {
+        const { data, error } = await supabase
+        .from("usuarios")
+        .update(userData)
+        .eq("id", Number(userId))
+        .select();
+
+        if (error) {
+            console.error("Error al actualizar usuario:", error);
+            throw new Error(`Error al actualizar usuario: ${error.message}`);
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+}
+
+export const eliminarUsuario = async (userId: string) => {
+    try {
+        const { data, error } = await supabase
+        .from("usuarios")
+        .delete()
+        .eq("id", Number(userId))
+        .select();
+
+        if (error) {
+            console.error("Error al eliminar usuario:", error);
+            throw new Error(`Error al eliminar usuario: ${error.message}`);
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+};
 
 function base64ToFile(base64: string, filename: string, mimeType: string): File {
   const byteString = atob(base64.split(',')[1]);
