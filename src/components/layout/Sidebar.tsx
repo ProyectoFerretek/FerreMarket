@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth0 } from "@auth0/auth0-react";
 import {
   LayoutDashboard,
@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut, UserCog
 } from 'lucide-react';
+import { UserAuth } from '../../context/AuthContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,7 +29,8 @@ interface MenuItem {
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
   const location = useLocation();
-  const { logout } = useAuth0();
+  const Nav = useNavigate();
+  const { signOut } = UserAuth();
 
   const menuItems: MenuItem[] = [
     {
@@ -152,7 +154,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      logout({ logoutParams: { returnTo: window.location.origin } })
+                      signOut();
+                      Nav('/login');
                     }}
                     className={`
                       w-full flex items-center px-3 py-2.5 text-sm rounded-lg transition-colors group

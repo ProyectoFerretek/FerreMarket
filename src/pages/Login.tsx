@@ -1,14 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Shield, ArrowRight, Building2 } from 'lucide-react';
-import { iniciarSesion } from '../utils/auth';
-
-import { useAuth0  } from "@auth0/auth0-react";
+import { UserAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { cargarPermisosUsuario } from '../utils/auth';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberMe: false
   });
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -18,7 +17,8 @@ const Login: React.FC = () => {
   const [blockTimeRemaining, setBlockTimeRemaining] = useState(0);
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const { loginWithRedirect } = useAuth0();
+  const { signInUser } = UserAuth();
+  const Nav = useNavigate();
 
   // Simulación de bloqueo temporal
   useEffect(() => {
@@ -38,30 +38,6 @@ const Login: React.FC = () => {
     return emailRegex.test(email);
   };
 
-  const validatePassword = (password: string): { isValid: boolean; errors: string[] } => {
-    const errors: string[] = [];
-    
-    if (password.length < 8) {
-      errors.push('Mínimo 8 caracteres');
-    }
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Al menos una mayúscula');
-    }
-    if (!/[a-z]/.test(password)) {
-      errors.push('Al menos una minúscula');
-    }
-    if (!/\d/.test(password)) {
-      errors.push('Al menos un número');
-    }
-    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-      errors.push('Al menos un carácter especial');
-    }
-
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  };
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -74,20 +50,18 @@ const Login: React.FC = () => {
 
     if (!formData.password) {
       newErrors.password = 'La contraseña es obligatoria';
-    } else {
-      const passwordValidation = validatePassword(formData.password);
-      if (!passwordValidation.isValid) {
-        newErrors.password = passwordValidation.errors.join(', ');
-      }
-    }
+    } 
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+  const MAX_LOGIN_ATTEMPTS = 3;
+  const BLOCK_DURATION_SECONDS = 300;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (isBlocked) {
       return;
     }
@@ -99,25 +73,56 @@ const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulación de autenticación
       await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const { session, error } = await signInUser(formData.email, formData.password);
       
-    } catch (error) {
-      const newAttempts = loginAttempts + 1;
-      setLoginAttempts(newAttempts);
-      
-      if (newAttempts >= 3) {
-        setIsBlocked(true);
-        setBlockTimeRemaining(300); // 5 minutos
-        setErrors({ general: 'Demasiados intentos fallidos. Cuenta bloqueada temporalmente.' });
+      if (error) {
+        handleLoginError();
       } else {
-        setErrors({ 
-          general: `Credenciales incorrectas. Intentos restantes: ${3 - newAttempts}` 
-        });
+        resetLoginAttempts();
+        cargarPermisosUsuario();
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        Nav('/');
       }
+    } catch (error) {
+      console.error('Error durante el login:', error);
+      handleLoginError();
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleLoginError = () => {
+    const newAttempts = loginAttempts + 1;
+    setLoginAttempts(newAttempts);
+
+    if (newAttempts >= MAX_LOGIN_ATTEMPTS) {
+      blockUser();
+    } else {
+      showRemainingAttempts(newAttempts);
+    }
+  };
+
+  const blockUser = () => {
+    setIsBlocked(true);
+    setBlockTimeRemaining(BLOCK_DURATION_SECONDS);
+    setErrors({ 
+      general: 'Demasiados intentos fallidos. Cuenta bloqueada temporalmente.' 
+    });
+  };
+
+  const showRemainingAttempts = (attempts: number) => {
+    const remainingAttempts = MAX_LOGIN_ATTEMPTS - attempts;
+    setErrors({
+      general: `Credenciales incorrectas. Intentos restantes: ${remainingAttempts}`
+    });
+  };
+
+  const resetLoginAttempts = () => {
+    setLoginAttempts(0);
+    setErrors({});
   };
 
   const formatTime = (seconds: number): string => {
@@ -180,9 +185,84 @@ const Login: React.FC = () => {
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email Corporativo
+              </label>
+              <div className="relative">
+                <Mail size={20} className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                  focusedField === 'email' ? 'text-blue-500' : 'text-gray-400'
+                }`} />
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                  onFocus={() => setFocusedField('email')}
+                  onBlur={() => setFocusedField(null)}
+                  className={`w-full pl-10 pr-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white ${
+                    getFieldError('email') ? 'border-red-300 bg-red-50' : 
+                    isFieldValid('email') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                  }`}
+                  placeholder="admin@ferremarket.com"
+                  disabled={isBlocked}
+                  autoComplete="email"
+                  aria-describedby={getFieldError('email') ? 'email-error' : undefined}
+                />
+              </div>
+              {getFieldError('email') && (
+                <p id="email-error" className="mt-2 text-sm text-red-600 flex items-center" role="alert">
+                  <AlertCircle size={16} className="mr-1" />
+                  {getFieldError('email')}
+                </p>
+              )}
+            </div>
+
+            {/* Password Field */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña
+              </label>
+              <div className="relative">
+                <Lock size={20} className={`absolute left-3 top-1/2 transform -translate-y-1/2 transition-colors ${
+                  focusedField === 'password' ? 'text-blue-500' : 'text-gray-400'
+                }`} />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                  onFocus={() => setFocusedField('password')}
+                  onBlur={() => setFocusedField(null)}
+                  className={`w-full pl-10 pr-12 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white ${
+                    getFieldError('password') ? 'border-red-300 bg-red-50' : 
+                    isFieldValid('password') ? 'border-green-300 bg-green-50' : 'border-gray-300'
+                  }`}
+                  placeholder="Admin123!"
+                  disabled={isBlocked}
+                  autoComplete="current-password"
+                  aria-describedby={getFieldError('password') ? 'password-error' : 'password-requirements'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  disabled={isBlocked}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+              {getFieldError('password') && (
+                <p id="password-error" className="mt-2 text-sm text-red-600 flex items-center" role="alert">
+                  <AlertCircle size={16} className="mr-1" />
+                  {getFieldError('password')}
+                </p>
+              )}
+            </div>
+
+            {/* Submit Button */}
             <button
               type="submit"
-              onClick={() => loginWithRedirect()}
               disabled={isLoading || isBlocked}
               className="w-full bg-orange-500 text-white py-3 px-4 rounded-xl hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium flex items-center justify-center shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
