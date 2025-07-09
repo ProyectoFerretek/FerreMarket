@@ -8,21 +8,21 @@ const usuarioActual = {
 }
 
 
-export const obtenerUsuarioIdByUUID = async (uuid: string) => {
+export const obtenerUsuarioIdByUUID = async (uuid: string): Promise<number | null> => {
 	const { data, error } = await supabase
 		.from('usuarios')
 		.select('id')
 		.eq('uid', uuid)
 		.single();
 
+	console.log('UUID del usuario:', uuid);
+
 	if (error) {
 		console.error('Error al obtener el ID del usuario por UUID:', error);
 		return null;
 	}
 
-	if (data) {
-		usuarioActual.id = data.id;
-	}
+	return data ? data.id : null;
 }
 
 export const cargarPermisosTrabajador = async () => {
@@ -30,12 +30,11 @@ export const cargarPermisosTrabajador = async () => {
 	if (session.data.session) {
 		const { user } = session.data.session;
 		const { data, error } = await supabase
-			.from('trabajadores')
+			.from('usuarios')
 			.select('*')
 			.eq('uid', user.id)
 			.single();
 
-		console.log(user)
 		if (error) {
 			console.error('Error al cargar los permisos del usuario:', error);
 			return;
