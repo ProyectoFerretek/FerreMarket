@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Plus, Search, Filter, Calendar, Download, Eye, Edit2, Trash2, 
   ArrowUpDown, FileText, FileSpreadsheet, Tag, Percent, DollarSign,
@@ -7,134 +7,145 @@ import {
   X, Copy, Share2, QrCode, Mail, MessageSquare, Globe
 } from 'lucide-react';
 import { formatPrecio, formatFecha } from '../utils/formatters';
-import { productos, categorias, clientes, ventas } from '../data/mockData';
+import { productos, categorias, clientes, ventas, agregarPromocion, obtenerPromociones } from '../data/mockData';
 import ConfirmDialog from '../components/common/ConfirmDialog';
 import PromocionModal from '../components/modals/PromocionModal';
+import { Promocion } from '../types';
 
 // Mock data para promociones
 const promocionesIniciales = [
-  {
-    id: 'PROMO001',
-    codigo: 'DESCUENTO20',
-    nombre: 'Descuento 20% en toda la tienda',
-    tipo: 'porcentaje',
-    valor: 20,
-    valorMaximo: 50000,
-    montoMinimo: 100000,
-    fechaInicio: '2024-01-01T00:00:00',
-    fechaFin: '2024-12-31T23:59:59',
-    limiteTotalUsos: 1000,
-    limiteUsosPorCliente: 5,
-    usosActuales: 245,
-    estado: 'activo',
-    aplicaA: 'toda_tienda',
-    productosIncluidos: [],
-    productosExcluidos: [],
-    categoriasIncluidas: [],
-    categoriasExcluidas: [],
-    tipoCliente: 'todos',
-    combinable: false,
-    descripcion: 'Descuento del 20% en toda la tienda con compra mínima de $100.000',
-    fechaCreacion: '2024-01-01T10:00:00',
-    creadoPor: 'Admin',
-    ingresoGenerado: 2450000,
-    valorPromedioCompra: 125000,
-    tasaConversion: 15.2,
-    horariosUso: {
-      '00-06': 5,
-      '06-12': 45,
-      '12-18': 120,
-      '18-24': 75
-    },
-    productosVendidos: [
-      { id: '1', cantidad: 45, ingresos: 450000 },
-      { id: '2', cantidad: 32, ingresos: 320000 },
-      { id: '3', cantidad: 28, ingresos: 280000 }
-    ]
-  },
-  {
-    id: 'PROMO002',
-    codigo: 'NUEVOCLIENTE',
-    nombre: 'Bienvenida nuevos clientes',
-    tipo: 'monto_fijo',
-    valor: 15000,
-    valorMaximo: 15000,
-    montoMinimo: 50000,
-    fechaInicio: '2024-01-01T00:00:00',
-    fechaFin: '2024-12-31T23:59:59',
-    limiteTotalUsos: 500,
-    limiteUsosPorCliente: 1,
-    usosActuales: 89,
-    estado: 'activo',
-    aplicaA: 'toda_tienda',
-    productosIncluidos: [],
-    productosExcluidos: [],
-    categoriasIncluidas: [],
-    categoriasExcluidas: [],
-    tipoCliente: 'nuevo',
-    combinable: true,
-    descripcion: 'Descuento de $15.000 para nuevos clientes',
-    fechaCreacion: '2024-01-15T14:30:00',
-    creadoPor: 'Admin',
-    ingresoGenerado: 890000,
-    valorPromedioCompra: 75000,
-    tasaConversion: 22.5,
-    horariosUso: {
-      '00-06': 2,
-      '06-12': 25,
-      '12-18': 45,
-      '18-24': 17
-    },
-    productosVendidos: [
-      { id: '1', cantidad: 25, ingresos: 250000 },
-      { id: '4', cantidad: 18, ingresos: 180000 },
-      { id: '7', cantidad: 15, ingresos: 150000 }
-    ]
-  },
-  {
-    id: 'PROMO003',
-    codigo: 'HERRAMIENTAS10',
-    nombre: 'Descuento en herramientas',
-    tipo: 'porcentaje',
-    valor: 10,
-    valorMaximo: 25000,
-    montoMinimo: 0,
-    fechaInicio: '2024-02-01T00:00:00',
-    fechaFin: '2024-02-29T23:59:59',
-    limiteTotalUsos: 200,
-    limiteUsosPorCliente: 3,
-    usosActuales: 156,
-    estado: 'expirado',
-    aplicaA: 'categorias',
-    productosIncluidos: [],
-    productosExcluidos: [],
-    categoriasIncluidas: ['1'], // Herramientas
-    categoriasExcluidas: [],
-    tipoCliente: 'todos',
-    combinable: true,
-    descripcion: 'Descuento del 10% en toda la categoría de herramientas',
-    fechaCreacion: '2024-01-25T09:15:00',
-    creadoPor: 'Admin',
-    ingresoGenerado: 1560000,
-    valorPromedioCompra: 95000,
-    tasaConversion: 18.7,
-    horariosUso: {
-      '00-06': 8,
-      '06-12': 52,
-      '12-18': 78,
-      '18-24': 18
-    },
-    productosVendidos: [
-      { id: '1', cantidad: 65, ingresos: 650000 },
-      { id: '2', cantidad: 42, ingresos: 420000 },
-      { id: '4', cantidad: 35, ingresos: 350000 }
-    ]
-  }
+  // {
+  //   id: 'PROMO001',
+  //   codigo: 'DESCUENTO20',
+  //   nombre: 'Descuento 20% en toda la tienda',
+  //   tipo: 'porcentaje',
+  //   valor: 20,
+  //   valorMaximo: 50000,
+  //   montoMinimo: 100000,
+  //   fechaInicio: '2024-01-01T00:00:00',
+  //   fechaFin: '2024-12-31T23:59:59',
+  //   limiteTotalUsos: 1000,
+  //   limiteUsosPorCliente: 5,
+  //   usosActuales: 245,
+  //   estado: 'activo',
+  //   aplicaA: 'toda_tienda',
+  //   productosIncluidos: [],
+  //   productosExcluidos: [],
+  //   categoriasIncluidas: [],
+  //   categoriasExcluidas: [],
+  //   tipoCliente: 'todos',
+  //   combinable: false,
+  //   descripcion: 'Descuento del 20% en toda la tienda con compra mínima de $100.000',
+  //   fechaCreacion: '2024-01-01T10:00:00',
+  //   creadoPor: 'Admin',
+  //   ingresoGenerado: 2450000,
+  //   valorPromedioCompra: 125000,
+  //   tasaConversion: 15.2,
+  //   horariosUso: {
+  //     '00-06': 5,
+  //     '06-12': 45,
+  //     '12-18': 120,
+  //     '18-24': 75
+  //   },
+  //   productosVendidos: [
+  //     { id: '1', cantidad: 45, ingresos: 450000 },
+  //     { id: '2', cantidad: 32, ingresos: 320000 },
+  //     { id: '3', cantidad: 28, ingresos: 280000 }
+  //   ]
+  // },
+  // {
+  //   id: 'PROMO002',
+  //   codigo: 'NUEVOCLIENTE',
+  //   nombre: 'Bienvenida nuevos clientes',
+  //   tipo: 'monto_fijo',
+  //   valor: 15000,
+  //   valorMaximo: 15000,
+  //   montoMinimo: 50000,
+  //   fechaInicio: '2024-01-01T00:00:00',
+  //   fechaFin: '2024-12-31T23:59:59',
+  //   limiteTotalUsos: 500,
+  //   limiteUsosPorCliente: 1,
+  //   usosActuales: 89,
+  //   estado: 'activo',
+  //   aplicaA: 'toda_tienda',
+  //   productosIncluidos: [],
+  //   productosExcluidos: [],
+  //   categoriasIncluidas: [],
+  //   categoriasExcluidas: [],
+  //   tipoCliente: 'nuevo',
+  //   combinable: true,
+  //   descripcion: 'Descuento de $15.000 para nuevos clientes',
+  //   fechaCreacion: '2024-01-15T14:30:00',
+  //   creadoPor: 'Admin',
+  //   ingresoGenerado: 890000,
+  //   valorPromedioCompra: 75000,
+  //   tasaConversion: 22.5,
+  //   horariosUso: {
+  //     '00-06': 2,
+  //     '06-12': 25,
+  //     '12-18': 45,
+  //     '18-24': 17
+  //   },
+  //   productosVendidos: [
+  //     { id: '1', cantidad: 25, ingresos: 250000 },
+  //     { id: '4', cantidad: 18, ingresos: 180000 },
+  //     { id: '7', cantidad: 15, ingresos: 150000 }
+  //   ]
+  // },
+  // {
+  //   id: 'PROMO003',
+  //   codigo: 'HERRAMIENTAS10',
+  //   nombre: 'Descuento en herramientas',
+  //   tipo: 'porcentaje',
+  //   valor: 10,
+  //   valorMaximo: 25000,
+  //   montoMinimo: 0,
+  //   fechaInicio: '2024-02-01T00:00:00',
+  //   fechaFin: '2024-02-29T23:59:59',
+  //   limiteTotalUsos: 200,
+  //   limiteUsosPorCliente: 3,
+  //   usosActuales: 156,
+  //   estado: 'expirado',
+  //   aplicaA: 'categorias',
+  //   productosIncluidos: [],
+  //   productosExcluidos: [],
+  //   categoriasIncluidas: ['1'], // Herramientas
+  //   categoriasExcluidas: [],
+  //   tipoCliente: 'todos',
+  //   combinable: true,
+  //   descripcion: 'Descuento del 10% en toda la categoría de herramientas',
+  //   fechaCreacion: '2024-01-25T09:15:00',
+  //   creadoPor: 'Admin',
+  //   ingresoGenerado: 1560000,
+  //   valorPromedioCompra: 95000,
+  //   tasaConversion: 18.7,
+  //   horariosUso: {
+  //     '00-06': 8,
+  //     '06-12': 52,
+  //     '12-18': 78,
+  //     '18-24': 18
+  //   },
+  //   productosVendidos: [
+  //     { id: '1', cantidad: 65, ingresos: 650000 },
+  //     { id: '2', cantidad: 42, ingresos: 420000 },
+  //     { id: '4', cantidad: 35, ingresos: 350000 }
+  //   ]
+  // }
 ];
 
 const Promociones: React.FC = () => {
   // Estados principales
-  const [promociones, setPromociones] = useState(promocionesIniciales);
+  const [promociones, setPromociones] = useState<Promocion[]>([]);
+
+  const cargarPromociones = async () => {
+      const promocionesData = await obtenerPromociones();
+      setPromociones(promocionesData);
+  }
+  
+  useEffect(() => {
+      cargarPromociones();
+  }, []);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [promocionSeleccionada, setPromocionSeleccionada] = useState<any>(null);
@@ -175,7 +186,7 @@ const Promociones: React.FC = () => {
   // Filtrar promociones
   const promocionesFiltradas = useMemo(() => {
     return promociones
-      .filter(promocion => {
+      .filter((promocion: { codigo: string; nombre: string; estado: string; tipo: string; fechaInicio: string | number | Date; fechaFin: string | number | Date; }) => {
         const matchBusqueda = promocion.codigo.toLowerCase().includes(busqueda.toLowerCase()) ||
                             promocion.nombre.toLowerCase().includes(busqueda.toLowerCase());
         const matchEstado = !filtroEstado || promocion.estado === filtroEstado;
@@ -219,8 +230,9 @@ const Promociones: React.FC = () => {
         p.id === promocionSeleccionada.id ? { ...p, ...promocionData } : p
       ));
     } else {
-      // Crear nueva promoción
-      setPromociones(prev => [...prev, promocionData]);
+      agregarPromocion(promocionData).then(() => {
+        cargarPromociones();
+      })
     }
     setPromocionSeleccionada(null);
   };
@@ -275,13 +287,13 @@ const Promociones: React.FC = () => {
   const getTipoIcono = (tipo: string) => {
     switch (tipo) {
       case 'porcentaje':
-        return <Percent size={16} className="text-blue-600" />;
+        return <Percent size={16} className="text-white-500" />;
       case 'monto_fijo':
-        return <DollarSign size={16} className="text-green-600" />;
+        return <DollarSign size={16} className="text-white-500" />;
       case 'envio_gratis':
-        return <Gift size={16} className="text-purple-600" />;
+        return <Gift size={16} className="text-white-500" />;
       default:
-        return <Tag size={16} className="text-gray-600" />;
+        return <Tag size={16} className="text-white-500" />;
     }
   };
 
@@ -306,7 +318,7 @@ const Promociones: React.FC = () => {
 
   // Componente de estadísticas rápidas
   const EstadisticasRapidas = () => (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="flex items-center">
           <Zap size={20} className="text-blue-600 mr-3" />
@@ -334,15 +346,6 @@ const Promociones: React.FC = () => {
           </div>
         </div>
       </div>
-      <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-        <div className="flex items-center">
-          <Target size={20} className="text-orange-600 mr-3" />
-          <div>
-            <p className="text-2xl font-bold text-gray-900">{estadisticas.promedioConversion}%</p>
-            <p className="text-xs text-gray-600">Conversión promedio</p>
-          </div>
-        </div>
-      </div>
     </div>
   );
 
@@ -352,19 +355,19 @@ const Promociones: React.FC = () => {
     const diasRestantes = Math.ceil((new Date(promocion.fechaFin).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
     
     return (
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200">
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all duration-200 flex flex-col h-full">
         {/* Header de la tarjeta */}
-        <div className="p-4 border-b border-gray-100">
+        <div className="p-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-start justify-between">
             <div className="flex items-center space-x-3 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+              <div className="w-12 h-12 rounded-full bg-orange-500 flex items-center justify-center text-white font-bold flex-shrink-0">
                 {getTipoIcono(promocion.tipo)}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-medium text-gray-900 truncate">
+                <h3 className="text-sm font-medium text-gray-900 truncate h-5">
                   {promocion.nombre}
                 </h3>
-                <div className="flex items-center mt-1">
+                <div className="flex items-center mt-1 h-6">
                   <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono text-blue-600">
                     {promocion.codigo}
                   </code>
@@ -379,7 +382,7 @@ const Promociones: React.FC = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 flex-shrink-0">
               <div className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full border ${getEstadoColor(promocion.estado)}`}>
                 {getEstadoIcono(promocion.estado)}
                 <span className="ml-1 capitalize">{promocion.estado}</span>
@@ -389,51 +392,49 @@ const Promociones: React.FC = () => {
         </div>
 
         {/* Contenido de la tarjeta */}
-        <div className="p-4 space-y-3">
+        <div className="p-4 flex-1 flex flex-col">
           {/* Valor del descuento */}
-          <div className="text-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3">
-            <div className="text-2xl font-bold text-gray-900">
+          <div className="text-center bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-3 mb-3">
+            <div className="text-2xl font-bold text-gray-900 h-8 flex items-center justify-center">
               {promocion.tipo === 'porcentaje' ? `${promocion.valor}%` : formatPrecio(promocion.valor)}
             </div>
-            <div className="text-xs text-gray-600">
+            <div className="text-xs text-gray-600 h-4 flex items-center justify-center">
               {promocion.tipo === 'porcentaje' ? 'de descuento' : 'descuento fijo'}
             </div>
-            {promocion.montoMinimo > 0 && (
-              <div className="text-xs text-gray-500 mt-1">
-                Compra mínima: {formatPrecio(promocion.montoMinimo)}
-              </div>
-            )}
+            <div className="text-xs text-gray-500 mt-1 h-4 flex items-center justify-center">
+              {promocion.montoMinimo > 0 ? `Compra mínima: ${formatPrecio(promocion.montoMinimo)}` : ' '}
+            </div>
           </div>
 
           {/* Estadísticas de uso */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-xs">
+          <div className="space-y-2 mb-3">
+            <div className="flex justify-between text-xs h-4">
               <span className="text-gray-600">Usos:</span>
               <span className="font-medium">{promocion.usosActuales} / {promocion.limiteTotalUsos}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                className="bg-orange-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${Math.min(porcentajeUso, 100)}%` }}
               ></div>
             </div>
           </div>
 
           {/* Información temporal */}
-          <div className="grid grid-cols-2 gap-3 text-xs">
+          <div className="grid grid-cols-2 gap-3 text-xs mb-3">
             <div className="text-center">
-              <div className="text-gray-600">Ingresos</div>
-              <div className="font-bold text-green-600">{formatPrecio(promocion.ingresoGenerado)}</div>
+              <div className="text-gray-600 h-4">Ingresos</div>
+              <div className="font-bold text-green-600 h-5 flex items-center justify-center">{formatPrecio(promocion.ingresoGenerado)}</div>
             </div>
             <div className="text-center">
-              <div className="text-gray-600">Conversión</div>
-              <div className="font-bold text-blue-600">{promocion.tasaConversion}%</div>
+              <div className="text-gray-600 h-4">Conversión</div>
+              <div className="font-bold text-blue-600 h-5 flex items-center justify-center">{promocion.tasaConversion}%</div>
             </div>
           </div>
 
           {/* Días restantes */}
-          {promocion.estado === 'activo' && (
-            <div className="text-center">
+          <div className="text-center mb-3 flex-1 flex items-center justify-center">
+            {promocion.estado === 'activo' ? (
               <div className={`text-xs px-2 py-1 rounded-full ${
                 diasRestantes <= 7 ? 'bg-red-100 text-red-700' : 
                 diasRestantes <= 30 ? 'bg-yellow-100 text-yellow-700' : 
@@ -441,12 +442,14 @@ const Promociones: React.FC = () => {
               }`}>
                 {diasRestantes > 0 ? `${diasRestantes} días restantes` : 'Expirado'}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="h-6"></div>
+            )}
+          </div>
         </div>
 
         {/* Acciones */}
-        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100">
+        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex-shrink-0">
           <div className="flex space-x-2">
             <button
               onClick={() => setVistaAnalisis(promocion)}
@@ -495,7 +498,7 @@ const Promociones: React.FC = () => {
         
         <div className="p-6 space-y-6">
           {/* Métricas principales */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
               <div className="flex items-center justify-between">
                 <div>
@@ -525,16 +528,6 @@ const Promociones: React.FC = () => {
                 <ShoppingCart size={24} className="text-purple-600" />
               </div>
             </div>
-            
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-orange-600">Tasa de Conversión</p>
-                  <p className="text-2xl font-bold text-orange-900">{promocion.tasaConversion}%</p>
-                </div>
-                <Target size={24} className="text-orange-600" />
-              </div>
-            </div>
           </div>
 
           {/* Gráficos */}
@@ -556,7 +549,7 @@ const Promociones: React.FC = () => {
                       <div className="flex-1 mx-3">
                         <div className="w-full bg-gray-200 rounded-full h-2">
                           <div 
-                            className="bg-blue-600 h-2 rounded-full"
+                            className="bg-orange-500 h-2 rounded-full"
                             style={{ width: `${porcentaje}%` }}
                           ></div>
                         </div>
@@ -651,7 +644,7 @@ const Promociones: React.FC = () => {
             </button>
             <button
               onClick={() => {/* Exportar Excel */}}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center"
+              className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 flex items-center"
             >
               <FileText size={16} className="mr-2" />
               Exportar Excel
@@ -681,7 +674,7 @@ const Promociones: React.FC = () => {
             setPromocionSeleccionada(null);
             setModalOpen(true);
           }}
-          className="bg-blue-700 text-white px-4 py-2 rounded-lg hover:bg-blue-800 flex items-center transition-colors"
+          className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center transition-colors"
         >
           <Plus size={20} className="mr-2" />
           Nueva Promoción
@@ -790,7 +783,7 @@ const Promociones: React.FC = () => {
           </p>
           <button
             onClick={limpiarFiltros}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 transition-colors"
           >
             Limpiar filtros
           </button>
@@ -844,6 +837,7 @@ const Promociones: React.FC = () => {
           onClose={() => {
             setModalOpen(false);
             setPromocionSeleccionada(null);
+            obtenerPromociones();
           }}
           onSave={handleGuardarPromocion}
         />

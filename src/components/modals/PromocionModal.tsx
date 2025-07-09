@@ -600,7 +600,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
     horaInicio: '00:00',
     fechaFin: '',
     horaFin: '23:59',
-    zonaHoraria: 'America/Lima',
+    zonaHoraria: 'America/Santiago',
     limiteTotalUsos: 0,
     limiteUsosPorCliente: 1,
     
@@ -647,7 +647,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
         horaInicio: fechaInicio.toTimeString().slice(0, 5),
         fechaFin: fechaFin.toISOString().split('T')[0],
         horaFin: fechaFin.toTimeString().slice(0, 5),
-        zonaHoraria: 'America/Lima',
+        zonaHoraria: 'America/Santiago',
         limiteTotalUsos: promocion.limiteTotalUsos || 0,
         limiteUsosPorCliente: promocion.limiteUsosPorCliente || 1,
         
@@ -677,7 +677,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
 
   const generarCodigo = useCallback(() => {
     const prefijos = ['DESC', 'PROMO', 'OFERTA', 'SAVE'];
-    const sufijos = ['2024', 'ESPECIAL', 'VIP', 'FLASH'];
+    const sufijos = ['2025', 'ESPECIAL', 'VIP', 'FLASH'];
     const numeros = Math.floor(Math.random() * 100);
     
     const prefijo = prefijos[Math.floor(Math.random() * prefijos.length)];
@@ -806,7 +806,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
         {/* Header del Modal */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-xl flex-shrink-0">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center text-white">
               <Gift size={20} />
             </div>
             <div>
@@ -837,7 +837,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
               <React.Fragment key={numeroPaso}>
                 <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
                   numeroPaso <= paso 
-                    ? 'bg-blue-600 text-white' 
+                    ? 'bg-orange-500 text-white' 
                     : 'bg-gray-200 text-gray-600'
                 }`}>
                   {numeroPaso < paso ? (
@@ -848,7 +848,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
                 </div>
                 {numeroPaso < 3 && (
                   <div className={`flex-1 h-1 mx-2 ${
-                    numeroPaso < paso ? 'bg-blue-600' : 'bg-gray-200'
+                    numeroPaso < paso ? 'bg-orange-500' : 'bg-gray-200'
                   }`} />
                 )}
               </React.Fragment>
@@ -897,7 +897,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
               {paso < 3 ? (
                 <button
                   onClick={handleSiguiente}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 transition-colors"
                 >
                   Siguiente
                 </button>
@@ -905,7 +905,7 @@ const PromocionModal: React.FC<PromocionModalProps> = ({ promocion, onClose, onS
                 <button
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? (
                     <>

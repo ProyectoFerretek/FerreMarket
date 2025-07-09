@@ -1,6 +1,7 @@
 import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, VentaFormulario, UsuarioFormData } from "../types";
 import { DateTime } from "luxon";
 import supabase from "../lib/supabase/Supabase";
+import toast from "react-hot-toast";
 
 
 // Categorías de productos
@@ -244,6 +245,31 @@ export const obtenerProductosDestacados = async (limit: number): Promise<Product
     }
 }
 
+export const obtenerNombreProductoById = async (id: string | number): Promise<string | null> => {
+    if (id === undefined || id === null || 
+        (typeof id === 'string' && id.trim() === '')) {
+        throw new Error('id must be a non-empty value');
+    }
+
+    const { data, error } = await supabase
+    .from("productos")
+    .select("nombre")
+    .eq("id", Number(id))
+    .single();
+
+    if (error) {
+        console.error("Error al obtener el nombre del producto por ID:", error);
+        throw new Error(`Error al obtener el nombre del producto por ID: ${error.message}`);
+    }
+
+    if (data) {
+        return data.nombre;
+    } else {
+        console.warn("No se encontró un producto con el ID proporcionado:", id);
+        return null; // Si no se encuentra el producto, retornamos null
+    }
+}
+
 // CLIENTES
 
 export const agregarCliente = async (tipoCliente: string, dataCliente: Cliente) => {
@@ -437,6 +463,30 @@ export const obtenerTotalComprasClientePorId = async (clienteId: string | number
     return totalCompras;
 }
 
+export const obtenerClienteIdByMail = async (email: string): Promise<number | null> => {
+    if (!email || typeof email !== 'string' || email.trim() === '') {
+        throw new Error('email must be a non-empty string');
+    }
+
+    const { data, error } = await supabase
+    .from("clientes")
+    .select("id")
+    .eq("email", email)
+    .single();
+
+    if (error) {
+        console.error("Error al obtener el ID del cliente por email:", error);
+        throw new Error(`Error al obtener el ID del cliente por email: ${error.message}`);
+    }
+
+    if (data) {
+        return data.id;
+    } else {
+        console.warn("No se encontró un cliente con el email proporcionado:", email);
+        return null; // Si no se encuentra el cliente, retornamos null
+    }
+}
+
 // VENTAS
 
 export const agregarVenta = async (venta: VentaFormulario) => {
@@ -616,6 +666,174 @@ export const obtenerVentasRecientes = async (cantidad: number): Promise<Venta[]>
     }
 }
 
+export const obtenerVentasPorCliente = async (clienteId: number): Promise<Venta[]> => {
+    const ventasList: Venta[] = [];
+    console.log("Obteniendo ventas para el cliente:", clienteId);
+    try {
+        const { data: ventas, error } = await supabase
+        .from("ventas")
+        .select("*")
+        .eq("cliente", Number(clienteId));
+
+        console.log(ventas);
+
+        if (error) {
+            console.error("Error al obtener ventas por cliente:", error);
+            throw new Error(`Error al obtener ventas por cliente: ${error.message}`);
+        }
+
+        const { data: productosVentas, error: productosError } = await supabase
+        .from("ventas_productos")
+        .select("*");
+
+        if (productosError) {
+            console.error("Error al obtener productos de ventas:", productosError);
+            throw new Error(`Error al obtener productos de ventas: ${productosError.message}`);
+        }
+
+        for (const venta of ventas) {
+            // Create array of promises and resolve them all at once
+            const productosPromises = productosVentas
+                .filter(p => p.venta_id === venta.id)
+                .map(async p => {
+                    console.log("Obteniendo nombre del producto para el ID:", p.producto_id);
+                    const nombre = await obtenerNombreProductoById(p.producto_id);
+                    return {
+                        id: p.producto_id,
+                        cantidad: p.cantidad,
+                        nombre: nombre || "Producto no encontrado",
+                        precioUnitario: p.precio_unitario
+                    };
+                });
+            
+            // Await all promises
+            const productos = await Promise.all(productosPromises);
+            
+            ventasList.push({
+                id: venta.id,
+                fecha: venta.fecha,
+                cliente: venta.cliente,
+                productos: productos,
+                total: venta.total,
+                metodoPago: venta.metodo_pago,
+                estado: venta.estado,
+            });
+        }
+        return ventasList;
+    } catch (error) {
+        console.error("Error al obtener ventas por cliente:", error);
+        throw new Error(`Error al obtener ventas por cliente: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+
+// PROMOCIONES
+
+export const agregarPromocion = async (promocion: any) => {
+    const promocionData = {
+        codigo: promocion.codigo,
+        nombre: promocion.nombre,
+        tipo: promocion.tipo,
+        valor: promocion.valor,
+        valor_maximo: promocion.valorMaximo || 0,
+        monto_minimo: promocion.montoMinimo || 0,
+        fecha_inicio: DateTime.fromISO(promocion.fechaInicio).setZone("America/Santiago").toISO(),
+        fecha_fin: DateTime.fromISO(promocion.fechaFin).setZone("America/Santiago").toISO(),
+        limite_total_usos: promocion.limiteTotalUsos || 0,
+        limite_usos_por_cliente: promocion.limiteUsosPorCliente || 1,
+        usos_actuales: 0,
+        estado: promocion.estado || "activo",
+        aplica_a: promocion.aplicaA || "todos",
+        productos_incluidos: promocion.productosIncluidos || [],
+        productos_excluidos: promocion.productosExcluidos || [],
+        categorias_incluidas: promocion.categoriasIncluidas || [],
+        categorias_excluidas: promocion.categoriasExcluidas || [],
+        tipo_cliente: promocion.tipoCliente || "todos",
+        combinable: promocion.combinable || false,
+        descripcion: promocion.descripcion || "",
+        fecha_creacion: DateTime.now().setZone("America/Santiago").toISO(),
+        creado_por: promocion.creadoPor || "Admin",
+        ingreso_generado: promocion.ingresoGenerado || 0,
+        valor_promedio_compra: promocion.valorPromedioCompra || 0,
+        tasa_conversion: promocion.tasaConversion || 0,
+        horarios_uso: promocion.horariosUso || [],
+        productos_vendidos: promocion.productosVendidos || [],
+    }
+
+    try {
+        const { data, error } = await supabase
+        .from("promociones")
+        .insert([promocionData])
+        .select();
+
+        if (error) {
+            toast.error("Error al agregar promoción: " + (error instanceof Error ? error.message : 'Unknown error'));
+            console.error("Error al agregar promoción:", error);
+            throw new Error(`Error al agregar promoción: ${error.message}`);
+        }
+
+        toast.success("Promoción agregada exitosamente");
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        toast.error("Error al agregar promoción: " + (err instanceof Error ? err.message : 'Unknown error'));
+        throw err;
+    }
+}
+
+export const obtenerPromociones = async (): Promise<any[]> => {
+    const promocionesList: any[] = [];
+
+    try {
+        const { data: promociones, error } = await supabase
+        .from("promociones")
+        .select("*");
+
+        if (error) {
+            console.error("Error al obtener promociones:", error);
+            throw new Error(`Error al obtener promociones: ${error.message}`);
+        }
+
+        for (const promocion of promociones) {
+            promocionesList.push({
+                id: promocion.id,
+                codigo: promocion.codigo,
+                nombre: promocion.nombre,
+                tipo: promocion.tipo,
+                valor: promocion.valor,
+                valorMaximo: promocion.valor_maximo || 0,
+                montoMinimo: promocion.monto_minimo || 0,
+                fechaInicio: promocion.fecha_inicio || DateTime.now().setZone("America/Santiago").toISO(),
+                fechaFin: promocion.fecha_fin || DateTime.now().setZone("America/Santiago").toISO(),
+                limiteTotalUsos: promocion.limite_total_usos || 0,
+                limiteUsosPorCliente: promocion.limite_usos_por_cliente || 1,
+                usosActuales: promocion.usos_actuales || 0,
+                estado: promocion.estado || "activo",
+                aplicaA: promocion.aplica_a || "todos",
+                productosIncluidos: promocion.productos_incluidos || [],
+                productosExcluidos: promocion.productos_excluidos || [],
+                categoriasIncluidas: promocion.categorias_incluidas || [],
+                categoriasExcluidas: promocion.categorias_excluidas || [],
+                tipoCliente: promocion.tipo_cliente || "todos",
+                combinable: promocion.combinable || false,
+                descripcion: promocion.descripcion || "",
+                fechaCreacion: promocion.fecha_creacion || DateTime.now().setZone("America/Santiago").toISO(),
+                creadoPor: promocion.creado_por || "Admin",
+                ingresoGenerado: promocion.ingreso_generado || 0,
+                valorPromedioCompra: promocion.valor_promedio_compra || 0,
+                tasaConversion: promocion.tasa_conversion || 0,
+                horariosUso: promocion.horarios_uso || [],
+                productosVendidos: promocion.productos_vendidos || [],
+            });
+        }
+
+        return promocionesList;
+    } catch (error) {
+        console.error("Error al obtener promociones:", error);
+        throw new Error(`Error al obtener promociones: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
 // USUARIOS
 
 export const obtenerUsuarios = async (): Promise<Usuario[]> => {
@@ -653,7 +871,7 @@ export const obtenerUsuarios = async (): Promise<Usuario[]> => {
 };
 
 export const obtenerUsuarioPorId = async () => {}
-export const agregarUsuario = async (NuevoUsuario: { uid: string; nombre: string; email: string; rol: "admin" | "usuario"; estado: "activo" | "inactivo"; fecha_creacion: string; ultima_modificacion: string; ultimo_acceso: string; }) => {
+export const agregarUsuario = async (NuevoUsuario: { uid: string; nombre: string; email: string; rol: "admin" | "usuario" | "cliente"; estado: "activo" | "inactivo"; fecha_creacion: string; ultima_modificacion: string; ultimo_acceso: string; }) => {
     try {
         const { data, error } = await supabase
         .from("usuarios")
