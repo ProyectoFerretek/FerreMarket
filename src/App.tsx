@@ -18,6 +18,7 @@ const ProtectedRoute = ({ children }) => {
 import Layout from './components/layout/Layout';
 
 // Pages
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
@@ -35,19 +36,20 @@ function App() {
   return (
       <BrowserRouter>
           <AuthContextProvider>
-              <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-                      <Route index element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-                      <Route path="productos" element={<ProtectedRoute><Productos /></ProtectedRoute>}/>
-                      <Route path="clientes" element={<ProtectedRoute><Clientes /></ProtectedRoute>} />
-                      <Route path="ventas" element={<ProtectedRoute><Ventas /></ProtectedRoute>} />
-                      <Route path="promociones" element={<ProtectedRoute><Promociones /></ProtectedRoute>} />
-                      <Route path="reportes" element={<ProtectedRoute><Reportes /></ProtectedRoute>} />
-                      <Route path="usuarios" element={<ProtectedRoute><GestionUsuarios /></ProtectedRoute>} />
-                      <Route path="*" element={<ProtectedRoute><NotFound /></ProtectedRoute>} />
-                  </Route>
-              </Routes>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/admin" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="productos" element={<Productos />} />
+                  <Route path="clientes" element={<Clientes />} />
+                  <Route path="ventas" element={<Ventas />} />
+                  <Route path="promociones" element={<Promociones />} />
+                  <Route path="reportes" element={<Reportes />} />
+                  <Route path="usuarios" element={<GestionUsuarios />} />
+                  <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
           </AuthContextProvider>
       </BrowserRouter>
   );
