@@ -17,17 +17,24 @@ import {
     Clock,
     AlertTriangle,
     Lock,
+    Mail,
+    X,
 } from "lucide-react";
-import { agregarUsuario, eliminarUsuario, obtenerUsuarios } from "../data/mockData";
+import { actualizarUsuario, agregarUsuario, eliminarUsuario, obtenerUsuarios } from "../data/mockData";
 import { formatFecha } from "../utils/formatters";
 import { puedeGestionarUsuarios, puedeRealizarAccion } from "../utils/auth";
 import UsuarioModal from "../components/modals/UsuarioModal";
 import ConfirmDialog from "../components/common/ConfirmDialog";
 import type { Usuario, UsuarioFormData } from "../types";
+import { UserAuth } from "../context/AuthContext";
 
 const GestionUsuarios: React.FC = () => {
     const [modalOpen, setModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
     const [confirmOpen, setConfirmOpen] = useState(false);
+    const [recoveryModalOpen, setRecoveryModalOpen] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [isRecovering, setIsRecovering] = useState(false);
     const [usuarioSeleccionado, setUsuarioSeleccionado] =
         useState<Usuario | null>(null);
     const [busqueda, setBusqueda] = useState("");
@@ -44,6 +51,7 @@ const GestionUsuarios: React.FC = () => {
     });
     const [mostrarFiltros, setMostrarFiltros] = useState(false);
 
+    const { signUpNewUser, deleteUser, recoverPassword } = UserAuth();
     const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
     const cargarUsuarios = async () => {
@@ -60,7 +68,7 @@ const GestionUsuarios: React.FC = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <Shield size={64} className="mx-auto text-gray-400 mb-4" />
+                    <Shield size={64} className="mx-auto text-orange-500 mb-4" />
                     <h2 className="text-2xl font-bold text-gray-900 mb-2">
                         Acceso Restringido
                     </h2>
@@ -124,21 +132,59 @@ const GestionUsuarios: React.FC = () => {
         setConfirmOpen(true);
     };
 
-    const handleRecuperar = (usuario: Usuario) => {}
+    const handleRecuperar = (usuario: Usuario) => {
+        setUsuarioSeleccionado(usuario);
+        setRecoveryModalOpen(true);
+    };
+
+    const confirmarRecuperacion = async () => {
+        if (!usuarioSeleccionado) return;
+        
+        setIsRecovering(true);
+        
+        try {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            await recoverPassword(usuarioSeleccionado.email);
+        } catch (error) {
+            console.error('Error al enviar email de recuperación:', error);
+            alert('Error al enviar el email de recuperación. Inténtalo de nuevo.');
+        } finally {
+            setIsRecovering(false);
+            setRecoveryModalOpen(false);
+            setUsuarioSeleccionado(null);
+        }
+    };
 
     const confirmarEliminacion = async () => {
-        // await eliminarCuenta(usuarioSeleccionado!.id).then(async () => {
-        //     await eliminarUsuario(usuarioSeleccionado!.id);
-        //     await cargarUsuarios();
-        // })
-
-        setConfirmOpen(false);
-        setUsuarioSeleccionado(null);
+        if (!usuarioSeleccionado) return;
+        
+        setIsDeleting(true);
+        
+        try {
+            await deleteUser(usuarioSeleccionado.uid);
+            await eliminarUsuario(usuarioSeleccionado.id);
+            await cargarUsuarios();
+        } catch (error) {
+            console.error('Error al eliminar usuario:', error);
+            // Aquí podrías mostrar un mensaje de error al usuario
+        } finally {
+            setIsDeleting(false);
+            setConfirmOpen(false);
+            setUsuarioSeleccionado(null);
+        }
     };
 
     const handleGuardarUsuario = async (usuarioData: UsuarioFormData) => {
         if (usuarioSeleccionado) {
-            console.log("Actualizando usuario:", usuarioData);
+            const updateUsuario = {
+                nombre: usuarioData.nombre,
+                email: usuarioData.email,
+                rol: usuarioData.rol || "usuario",
+                estado: usuarioData.estado || "activo",
+            }
+            await actualizarUsuario(usuarioSeleccionado.id, updateUsuario).then(async () => {
+                await cargarUsuarios();
+            });
         } else {
             const NuevoUsuario = {
                 uid: "",
@@ -146,13 +192,13 @@ const GestionUsuarios: React.FC = () => {
                 email: usuarioData.email,
                 rol: usuarioData.rol || "usuario",
                 estado: usuarioData.estado || "activo",
-                fechaCreacion: new Date().toISOString(),
-                ultimaModificacion: new Date().toISOString(),
-                ultimoAcceso: new Date().toISOString(),
+                fecha_creacion: new Date().toISOString(),
+                ultima_modificacion: new Date().toISOString(),
+                ultimo_acceso: new Date().toISOString(),
             }
 
-            await registrarCuenta(usuarioData.email, usuarioData.password).then(async (usuario) => {
-              NuevoUsuario.uid = usuario.user.uid;
+            await signUpNewUser(usuarioData.email, usuarioData.password).then(async (usuario) => {
+              NuevoUsuario.uid = usuario.data.user.id;
               await agregarUsuario(NuevoUsuario)
             })
 
@@ -254,6 +300,7 @@ const GestionUsuarios: React.FC = () => {
                     <button
                         onClick={() => {
                             setUsuarioSeleccionado(null);
+                            setModalMode('create');
                             setModalOpen(true);
                         }}
                         className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-amber-700 flex items-center text-sm font-medium transition-colors"
@@ -535,9 +582,11 @@ const GestionUsuarios: React.FC = () => {
                                                             : "bg-gray-100 text-gray-800"
                                                     }`}
                                                 >
-                                                    {usuario.rol === "admin"
-                                                        ? "Administrador"
-                                                        : "Usuario"}
+                                                    {usuario.rol === "admin" 
+                                                        ? "Administrador" 
+                                                        : usuario.rol === "cliente" 
+                                                            ? "Cliente" 
+                                                            : "Usuario"}
                                                 </span>
                                             </div>
                                         </td>
@@ -587,6 +636,7 @@ const GestionUsuarios: React.FC = () => {
                                                             setUsuarioSeleccionado(
                                                                 usuario
                                                             );
+                                                            setModalMode('view');
                                                             setModalOpen(true);
                                                         }}
                                                         className="text-gray-600 hover:text-gray-900 p-1 rounded"
@@ -603,6 +653,7 @@ const GestionUsuarios: React.FC = () => {
                                                             setUsuarioSeleccionado(
                                                                 usuario
                                                             );
+                                                            setModalMode('edit');
                                                             setModalOpen(true);
                                                         }}
                                                         className="text-blue-600 hover:text-blue-900 p-1 rounded"
@@ -709,6 +760,8 @@ const GestionUsuarios: React.FC = () => {
                                             >
                                                 {usuario.rol === "admin"
                                                     ? "Admin"
+                                                    : usuario.rol === "cliente"
+                                                    ? "Cliente"
                                                     : "Usuario"}
                                             </span>
                                             <span
@@ -725,12 +778,27 @@ const GestionUsuarios: React.FC = () => {
                                         </div>
 
                                         <div className="flex space-x-2">
+                                            {puedeRealizarAccion("ver") && (
+                                                <button
+                                                    onClick={() => {
+                                                        setUsuarioSeleccionado(
+                                                            usuario
+                                                        );
+                                                        setModalMode('view');
+                                                        setModalOpen(true);
+                                                    }}
+                                                    className="text-gray-600 hover:text-gray-900 p-2 rounded-lg hover:bg-gray-50"
+                                                >
+                                                    <Eye size={16} />
+                                                </button>
+                                            )}
                                             {puedeRealizarAccion("editar") && (
                                                 <button
                                                     onClick={() => {
                                                         setUsuarioSeleccionado(
                                                             usuario
                                                         );
+                                                        setModalMode('edit');
                                                         setModalOpen(true);
                                                     }}
                                                     className="text-blue-600 hover:text-blue-900 p-2 rounded-lg hover:bg-blue-50"
@@ -829,10 +897,12 @@ const GestionUsuarios: React.FC = () => {
             {/* Modal de usuario */}
             {modalOpen && (
                 <UsuarioModal
-                    usuario={usuarioSeleccionado}
+                    usuario={usuarioSeleccionado || undefined}
+                    mode={modalMode}
                     onClose={() => {
                         setModalOpen(false);
                         setUsuarioSeleccionado(null);
+                        setModalMode('create');
                     }}
                     onSave={handleGuardarUsuario}
                 />
@@ -845,7 +915,102 @@ const GestionUsuarios: React.FC = () => {
                     mensaje={`¿Estás seguro de que deseas eliminar al usuario "${usuarioSeleccionado?.nombre}"? Esta acción no se puede deshacer y el usuario perderá acceso al sistema.`}
                     onConfirm={confirmarEliminacion}
                     onCancel={() => setConfirmOpen(false)}
+                    isLoading={isDeleting}
                 />
+            )}
+
+            {/* Modal de recuperación de contraseña */}
+            {recoveryModalOpen && usuarioSeleccionado && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl w-full max-w-md shadow-2xl">
+                        <div className="flex justify-between items-center p-6 border-b border-gray-200">
+                            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                                <Mail size={20} className="mr-3 text-blue-600" />
+                                Recuperar Contraseña
+                            </h3>
+                            <button
+                                onClick={() => setRecoveryModalOpen(false)}
+                                disabled={isRecovering}
+                                className="text-gray-400 hover:text-gray-500 p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6">
+                            <div className="flex items-start space-x-3 mb-4">
+                                <div className="flex-shrink-0 p-2 bg-blue-100 rounded-lg">
+                                    <Lock size={20} className="text-blue-600" />
+                                </div>
+                                <div className="flex-1">
+                                    <h4 className="text-sm font-medium text-gray-900 mb-1">
+                                        Enviar email de recuperación
+                                    </h4>
+                                    <p className="text-sm text-gray-600">
+                                        Se enviará un email con instrucciones para restablecer la contraseña al usuario:
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div className="bg-gray-50 rounded-lg p-3 mb-4">
+                                <div className="flex items-center space-x-3">
+                                    <div className="flex-shrink-0">
+                                        {usuarioSeleccionado.avatar ? (
+                                            <img
+                                                className="h-10 w-10 rounded-full object-cover"
+                                                src={usuarioSeleccionado.avatar}
+                                                alt={usuarioSeleccionado.nombre}
+                                            />
+                                        ) : (
+                                            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                                <User size={20} className="text-gray-600" />
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">
+                                            {usuarioSeleccionado.nombre}
+                                        </p>
+                                        <p className="text-sm text-gray-500 truncate">
+                                            {usuarioSeleccionado.email}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <p className="text-xs text-gray-500">
+                                El usuario recibirá un enlace temporal para crear una nueva contraseña.
+                            </p>
+                        </div>
+                        
+                        <div className="flex justify-end space-x-3 p-6 border-t border-gray-200">
+                            <button
+                                onClick={() => setRecoveryModalOpen(false)}
+                                disabled={isRecovering}
+                                className="px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={confirmarRecuperacion}
+                                disabled={isRecovering}
+                                className="px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-orange-500 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center"
+                            >
+                                {isRecovering ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                                        Enviando...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Mail size={16} className="mr-2" />
+                                        Enviar Email
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

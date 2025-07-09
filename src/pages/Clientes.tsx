@@ -82,11 +82,7 @@ const Clientes: React.FC = () => {
   const clientesExtendidos = useMemo(() => {
     return clientes?.map(cliente => ({
       ...cliente,
-      tipoCliente: cliente.tipoCliente || 'individual',
-      identificacion: cliente.identificacion || `${Math.floor(Math.random() * 90000000) + 10000000}`,
-      estado: Math.random() > 0.1 ? 'activo' : 'inactivo',
       fechaRegistro: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toISOString(),
-      valorTotal: cliente.compras * (Math.random() * 50000 + 10000),
       ultimaActividad: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
     })) || [];
   }, [clientes]);
@@ -146,7 +142,7 @@ const Clientes: React.FC = () => {
     setClientesSeleccionados(
       clientesSeleccionados.length === clientesEnPagina.length 
         ? [] 
-        : clientesEnPagina.map(c => c.id)
+        : clientesEnPagina.map(c => c.id).filter((id): id is string => id !== undefined)
     );
   };
 
@@ -160,8 +156,8 @@ const Clientes: React.FC = () => {
 
   const exportarSeleccion = (formato: string) => {
     const clientesParaExportar = clientesFiltrados.filter(c => 
-      clientesSeleccionados.includes(c.id)
-    );
+        c.id && clientesSeleccionados.includes(c.id)
+      );
     console.log(`Exportando ${clientesParaExportar.length} clientes en formato ${formato}`);
   };
 
@@ -295,7 +291,7 @@ const Clientes: React.FC = () => {
           </div>
           <div className="text-center">
             <p className="text-lg font-bold text-gray-900">
-              ${Math.round(cliente.valorTotal).toLocaleString()}
+              ${Math.round(cliente.totalCompras).toLocaleString()}
             </p>
             <p className="text-xs text-gray-500">Valor total</p>
           </div>
@@ -623,7 +619,7 @@ const Clientes: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{cliente.compras}</div>
                       <div className="text-sm text-gray-500">
-                        ${Math.round(cliente.valorTotal).toLocaleString()}
+                        ${Math.round(cliente.totalCompras).toLocaleString()}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -828,7 +824,7 @@ const Clientes: React.FC = () => {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Valor total:</span>
                       <span className="text-sm font-medium text-gray-900">
-                        ${Math.round(vistaPreview.valorTotal).toLocaleString()}
+                        ${Math.round(vistaPreview.totalCompras).toLocaleString()}
                       </span>
                     </div>
                     <div className="flex justify-between">

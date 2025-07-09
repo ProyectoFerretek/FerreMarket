@@ -3,6 +3,7 @@ import { Bell, Menu, Search, User, X } from 'lucide-react';
 import { notificaciones } from '../../data/mockData';
 import NotificacionesDropdown from './NotificacionesDropdown';
 import SearchComponent from '../common/Search';
+import { obtenerUsuarioActual } from '../../utils/auth';
 
 interface HeaderProps {
   toggleSidebar: () => void;
@@ -69,6 +70,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen, isMobile })
     setSearchOpen(false);
   };
 
+  const user = obtenerUsuarioActual();
+
   return (
     <>
       <header className="bg-white border-b border-gray-200 sticky top-0 z-20 shadow-sm">
@@ -131,8 +134,8 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar, sidebarOpen, isMobile })
             {/* User Menu */}
             <button className="flex items-center text-gray-500 hover:text-orange-500 focus:outline-none p-1 rounded-lg hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px]">
               <div className="hidden sm:block mr-2 text-right">
-                <div className="text-xs sm:text-sm font-medium">Admin</div>
-                <div className="text-xs text-gray-500 hidden lg:block">Administrador</div>
+                <div className="text-xs sm:text-sm font-medium">{user.nombre}</div>
+                <div className="text-xs text-gray-500 hidden lg:block">{user.rol}</div>
               </div>
               <div className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-orange-500 flex items-center justify-center text-white">
                 <User size={isMobile ? 14 : 16} />

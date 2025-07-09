@@ -1,36 +1,8 @@
-import {
-    Producto,
-    Cliente,
-    Venta,
-    EstadisticaVenta,
-    Categoria,
-    Notificacion,
-    Usuario,
-    UsuarioFirebase,
-    UpdateProducto,
-    ClienteEmpresarial,
-    ClienteIndividual,
-    VentaFormulario,
-} from "../types";
-
-// import { dbFirestore } from "../lib/firebase/Firebase";
-// import {
-//     collection,
-//     addDoc,
-//     getDocs,
-//     getDoc,
-//     doc,
-//     setDoc,
-//     updateDoc,
-//     deleteDoc,
-//     onSnapshot,
-//     query,
-//     where,
-//     orderBy,
-// 	getCountFromServer,
-// } from "firebase/firestore";
-
+import { Producto, Cliente, Venta, EstadisticaVenta, Categoria, Notificacion, Usuario, UpdateProducto, VentaFormulario, UsuarioFormData } from "../types";
+import { DateTime } from "luxon";
 import supabase from "../lib/supabase/Supabase";
+import toast from "react-hot-toast";
+
 
 // Categorías de productos
 export const categorias: Categoria[] = [
@@ -44,187 +16,18 @@ export const categorias: Categoria[] = [
 
 // Productos destacados
 export const productos: Producto[] = [
-    {
-        id: "1",
-        nombre: "Taladro Inalámbrico 18V",
-        descripcion:
-            "Taladro recargable con batería de larga duración y maletín",
-        precio: 59990,
-        categoria: "1",
-        stock: 0,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "2",
-        nombre: "Set de Destornilladores (10 pcs)",
-        descripcion: "Juego de destornilladores precisión diferentes tamaños",
-        precio: 12990,
-        categoria: "1",
-        stock: 23,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "3",
-        nombre: "Pintura Látex Blanco 1GL",
-        descripcion: "Pintura lavable de alta cobertura para interiores",
-        precio: 18990,
-        categoria: "2",
-        stock: 42,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
-    {
-        id: "4",
-        nombre: 'Sierra Circular 7 1/4"',
-        descripcion: "Sierra eléctrica para cortes precisos en madera",
-        precio: 49990,
-        categoria: "1",
-        stock: 8,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "5",
-        nombre: "Cable Eléctrico 12AWG (10m)",
-        descripcion: "Cable flexible para instalaciones domésticas",
-        precio: 8990,
-        categoria: "3",
-        stock: 2,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
-    {
-        id: "6",
-        nombre: 'Llave Ajustable 10"',
-        descripcion: "Llave de alta resistencia para múltiples usos",
-        precio: 7990,
-        categoria: "1",
-        stock: 19,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
-    {
-        id: "7",
-        nombre: "Manguera de Jardín 15m",
-        descripcion: "Manguera reforzada con conectores incluidos",
-        precio: 15990,
-        categoria: "6",
-        stock: 12,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: true,
-    },
-    {
-        id: "8",
-        nombre: "Cemento 25kg",
-        descripcion: "Cemento de alta resistencia para obras",
-        precio: 6990,
-        categoria: "5",
-        stock: 34,
-        imagen: "src/assets/images/Taladro.webp",
-        destacado: false,
-    },
 ];
 
 // Clientes recientes
 export const clientes: Cliente[] = [
-    {
-        id: "1",
-        nombre: "Juan Pérez",
-        email: "juan.perez@gmail.com",
-        telefono: "+56 9 1234 5678",
-        direccion: "Av. Providencia 1234, Santiago",
-        compras: 8,
-        ultimaCompra: "2025-04-15",
-    },
-    {
-        id: "2",
-        nombre: "María González",
-        email: "maria.gon@outlook.com",
-        telefono: "+56 9 8765 4321",
-        direccion: "Los Leones 567, Providencia",
-        compras: 12,
-        ultimaCompra: "2025-04-18",
-    },
-    {
-        id: "3",
-        nombre: "Carlos Rodríguez",
-        email: "crodriguez@empresa.cl",
-        telefono: "+56 9 5555 7777",
-        direccion: "Av. Las Condes 789, Las Condes",
-        compras: 5,
-        ultimaCompra: "2025-04-10",
-    },
-    {
-        id: "4",
-        nombre: "Ana Silva",
-        email: "ana.silva@gmail.com",
-        telefono: "+56 9 3333 2222",
-        direccion: "Irarrázaval 890, Ñuñoa",
-        compras: 3,
-        ultimaCompra: "2025-04-16",
-    },
 ];
 
 // Ventas recientes
 export const ventas: Venta[] = [
-    {
-        id: "1",
-        fecha: "2025-04-19T14:35:00",
-        cliente: "1",
-        productos: [
-            { id: "1", cantidad: 1, precioUnitario: 59990 },
-            { id: "5", cantidad: 2, precioUnitario: 8990 },
-        ],
-        total: 77970,
-        metodoPago: "Tarjeta de crédito",
-        estado: "completada",
-    },
-    {
-        id: "2",
-        fecha: "2025-04-18T10:15:00",
-        cliente: "2",
-        productos: [
-            { id: "3", cantidad: 3, precioUnitario: 18990 },
-            { id: "8", cantidad: 5, precioUnitario: 6990 },
-        ],
-        total: 91920,
-        metodoPago: "Efectivo",
-        estado: "completada",
-    },
-    {
-        id: "3",
-        fecha: "2025-04-18T16:20:00",
-        cliente: "4",
-        productos: [
-            { id: "7", cantidad: 1, precioUnitario: 15990 },
-            { id: "2", cantidad: 1, precioUnitario: 12990 },
-        ],
-        total: 28980,
-        metodoPago: "Tarjeta de débito",
-        estado: "completada",
-    },
-    {
-        id: "4",
-        fecha: "2025-04-19T09:45:00",
-        cliente: "3",
-        productos: [{ id: "4", cantidad: 1, precioUnitario: 49990 }],
-        total: 49990,
-        metodoPago: "Transferencia",
-        estado: "pendiente",
-    },
 ];
 
 // Estadísticas de ventas últimos 7 días
 export const estadisticasVentas: EstadisticaVenta[] = [
-    { fecha: "2025-04-13", ventas: 245000 },
-    { fecha: "2025-04-14", ventas: 312000 },
-    { fecha: "2025-04-15", ventas: 287000 },
-    { fecha: "2025-04-16", ventas: 356000 },
-    { fecha: "2025-04-17", ventas: 298000 },
-    { fecha: "2025-04-18", ventas: 421000 },
-    { fecha: "2025-04-19", ventas: 352000 },
 ];
 
 // Notificaciones
@@ -236,111 +39,7 @@ export const notificaciones: Notificacion[] = [
         fecha: "2025-04-19T08:30:00",
         leida: false,
     },
-    {
-        id: "2",
-        mensaje: "Nueva orden #4 pendiente de entrega",
-        tipo: "info",
-        fecha: "2025-04-19T09:45:00",
-        leida: false,
-    },
-    {
-        id: "3",
-        mensaje: "Actualización de precios completada",
-        tipo: "info",
-        fecha: "2025-04-18T17:15:00",
-        leida: true,
-    },
-    {
-        id: "4",
-        mensaje: "Error al procesar pago de orden #5",
-        tipo: "error",
-        fecha: "2025-04-19T11:20:00",
-        leida: false,
-    },
 ];
-
-// Usuarios del sistema
-// export const usuarios: Usuario[] = [
-//   {
-//     id: '1',
-//     nombre: 'Administrador Principal',
-//     email: 'admin@ferremarket.com',
-//     rol: 'admin',
-//     estado: 'activo',
-//     fechaCreacion: '2024-01-15T10:00:00',
-//     ultimaModificacion: '2025-04-19T14:30:00',
-//     ultimoAcceso: '2025-04-19T15:45:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '2',
-//     nombre: 'Carlos Mendoza',
-//     email: 'carlos.mendoza@ferremarket.com',
-//     rol: 'admin',
-//     estado: 'activo',
-//     fechaCreacion: '2024-02-20T09:15:00',x
-//     ultimaModificacion: '2025-04-18T16:20:00',
-//     ultimoAcceso: '2025-04-19T08:30:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '3',
-//     nombre: 'Ana Rodríguez',
-//     email: 'ana.rodriguez@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'activo',
-//     fechaCreacion: '2024-03-10T11:30:00',
-//     ultimaModificacion: '2025-04-17T10:45:00',
-//     ultimoAcceso: '2025-04-19T12:15:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '4',
-//     nombre: 'Luis García',
-//     email: 'luis.garcia@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'activo',
-//     fechaCreacion: '2024-04-05T14:20:00',
-//     ultimaModificacion: '2025-04-16T09:30:00',
-//     ultimoAcceso: '2025-04-18T17:20:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '5',
-//     nombre: 'María Fernández',
-//     email: 'maria.fernandez@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'inactivo',
-//     fechaCreacion: '2024-01-30T16:45:00',
-//     ultimaModificacion: '2025-04-10T11:15:00',
-//     ultimoAcceso: '2025-04-10T11:15:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   },
-//   {
-//     id: '6',
-//     nombre: 'Roberto Silva',
-//     email: 'roberto.silva@ferremarket.com',
-//     rol: 'usuario',
-//     estado: 'activo',
-//     fechaCreacion: '2024-05-12T13:10:00',
-//     ultimaModificacion: '2025-04-19T08:45:00',
-//     ultimoAcceso: '2025-04-19T14:20:00',
-//     avatar: 'src/assets/images/Taladro.webp'
-//   }
-// ];
-
-// export const usuarios: Usuario[] = [];
-
-//   {
-//     id: '6',
-//     nombre: 'Llave Ajustable 10"',
-//     descripcion: 'Llave de alta resistencia para múltiples usos',
-//     precio: 7990,
-//     categoria: '1',
-//     stock: 19,
-//     imagen: 'src/assets/images/Taladro.webp',
-//     destacado: false
-//   },
 
 // DASHBOARD
 
@@ -546,34 +245,59 @@ export const obtenerProductosDestacados = async (limit: number): Promise<Product
     }
 }
 
+export const obtenerNombreProductoById = async (id: string | number): Promise<string | null> => {
+    if (id === undefined || id === null || 
+        (typeof id === 'string' && id.trim() === '')) {
+        throw new Error('id must be a non-empty value');
+    }
+
+    const { data, error } = await supabase
+    .from("productos")
+    .select("nombre")
+    .eq("id", Number(id))
+    .single();
+
+    if (error) {
+        console.error("Error al obtener el nombre del producto por ID:", error);
+        throw new Error(`Error al obtener el nombre del producto por ID: ${error.message}`);
+    }
+
+    if (data) {
+        return data.nombre;
+    } else {
+        console.warn("No se encontró un producto con el ID proporcionado:", id);
+        return null; // Si no se encuentra el producto, retornamos null
+    }
+}
+
 // CLIENTES
 
-export const agregarCliente = async (tipoCliente: string, dataCliente: ClienteIndividual | ClienteEmpresarial) => {
+export const agregarCliente = async (tipoCliente: string, dataCliente: Cliente) => {
     let userData: any = {};
 
     if (tipoCliente === "individual") {
         userData = {
             nombre: dataCliente.nombre,
-            apellidos: (dataCliente as ClienteIndividual).apellidos || "",
+            apellidos: dataCliente.apellidos || "",
             email: dataCliente.email,
             telefono: dataCliente.telefono,
-            direccion: (dataCliente as ClienteIndividual).direccion || "",
-            run: (dataCliente as ClienteIndividual).run,
+            direccion: dataCliente.direccion || "",
+            run: dataCliente.run,
             estado: "activo",
-            notas: (dataCliente as ClienteIndividual).notas || "",
+            notas: dataCliente.notas || "",
             tipo: "individual",
         };
     } else if (tipoCliente === "empresa") {
         userData = {
-            razonsocial: (dataCliente as ClienteEmpresarial).razonSocial,
-            nombre: (dataCliente as ClienteEmpresarial).nombreComercial || "",
+            razonsocial: dataCliente.razonSocial,
+            nombre: dataCliente.nombreComercial || "",
             email: dataCliente.email,
             telefono: dataCliente.telefono,
-            direccion: (dataCliente as ClienteEmpresarial).direccion || "",
-            rut: (dataCliente as ClienteEmpresarial).rut || "",
-            giro: (dataCliente as ClienteEmpresarial).giro || "",
+            direccion: dataCliente.direccion || "",
+            rut: dataCliente.rut || "",
+            giro: dataCliente.giro || "",
             estado: "activo",
-            notas: (dataCliente as ClienteEmpresarial).notas || "",
+            notas: dataCliente.notas || "",
             tipo: "empresarial",
         };
     }
@@ -617,16 +341,18 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                         run: cliente.run || "",
                         estado: cliente.estado || "activo",
                         notas: cliente.notas || "",
-                        compras: await obtenerTotalComprasClientePorId(cliente.id),
+                        compras: await obtenerCantidadComprasClientePorId(cliente.id),
+                        totalCompras: await obtenerTotalComprasClientePorId(cliente.id),
                         ultimaCompra: cliente.ultimacompra || "Sin fecha registrada.",
                         tipoCliente: "individual",
-                        fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
-                        ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                        fechaCreacion: cliente.fechaCreacion || DateTime.now().setZone("America/Santiago").toISO(),
+                        ultimaModificacion: cliente.ultimaModificacion || DateTime.now().setZone("America/Santiago").toISO(),
                     });
                 } else if (cliente.tipo === "empresarial") {
                     clientesList.push({
                         id: cliente.id,
-                        nombre: cliente.razonsocial,
+                        nombre: cliente.nombre,
+                        razonSocial: cliente.razonsocial || "",
                         email: cliente.email,
                         telefono: cliente.telefono,
                         direccion: cliente.direccion || "",
@@ -634,11 +360,12 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
                         giro: cliente.giro || "",
                         estado: cliente.estado || "activo",
                         notas: cliente.notas || "",
-                        compras: await obtenerTotalComprasClientePorId(cliente.id),
+                        compras: await obtenerCantidadComprasClientePorId(cliente.id),
+                        totalCompras: await obtenerTotalComprasClientePorId(cliente.id),
                         ultimaCompra: cliente.ultimacompra || 'Sin fecha registrada.',
                         tipoCliente: "empresa",
-                        fechaCreacion: cliente.fechaCreacion || new Date().toISOString(),
-                        ultimaModificacion: cliente.ultimaModificacion || new Date().toISOString(),
+                        fechaCreacion: cliente.fechaCreacion || DateTime.now().setZone("America/Santiago").toISO(),
+                        ultimaModificacion: cliente.ultimaModificacion || DateTime.now().setZone("America/Santiago").toISO(),
                     });
                 }
             }
@@ -651,7 +378,7 @@ export const obtenerClientes = async (): Promise<Cliente[]> => {
     }
 }
 
-export const actualizarCliente = async (id: string, cliente: Cliente) => {}
+export const actualizarCliente = async () => {}
 
 export const eliminarCliente = async (clientId: string) => {
     const { error } = await supabase
@@ -683,7 +410,7 @@ export const obtenerClientesRegistrados = async () => {
     return totalClientes;
 }
 
-export const obtenerTotalComprasClientePorId = async (clienteId: string | number): Promise<number> => {
+export const obtenerCantidadComprasClientePorId = async (clienteId: string | number): Promise<number> => {
     if (clienteId === undefined || clienteId === null || 
         (typeof clienteId === 'string' && clienteId.trim() === '')) {
         throw new Error('clienteId must be a non-empty value');
@@ -699,8 +426,65 @@ export const obtenerTotalComprasClientePorId = async (clienteId: string | number
         throw new Error(`Error fetching purchases for client: ${error.message}`);
     }
 
-    const totalCompras = ventas.length    
+    
+    // SUMAMOS EL TOTAL DE LAS COMPRAS DEL CLIENTE
+    if (!ventas || ventas.length === 0) {
+        return 0; // Si no hay compras, retornamos 0
+    }
+
+    // Sumamos los totales de las compras del cliente
+    const totalCompras = ventas.length;
     return totalCompras;
+}
+
+export const obtenerTotalComprasClientePorId = async (clienteId: string | number): Promise<number> => {
+    if (clienteId === undefined || clienteId === null || 
+        (typeof clienteId === 'string' && clienteId.trim() === '')) {
+        throw new Error('clienteId must be a non-empty value');
+    }
+
+    const { data: ventas, error } = await supabase
+    .from("ventas")
+    .select("total")
+    .eq("cliente", Number(clienteId));
+
+    if (error) {
+        console.error(`Error fetching total purchases for client ${clienteId}:`, error);
+        throw new Error(`Error fetching total purchases for client: ${error.message}`);
+    }
+
+    // SUMAMOS EL TOTAL DE LAS COMPRAS DEL CLIENTE
+    if (!ventas || ventas.length === 0) {
+        return 0; // Si no hay compras, retornamos 0
+    }
+
+    // Sumamos los totales de las compras del cliente
+    const totalCompras = ventas.reduce((acc, venta) => acc + (venta.total || 0), 0);
+    return totalCompras;
+}
+
+export const obtenerClienteIdByMail = async (email: string): Promise<number | null> => {
+    if (!email || typeof email !== 'string' || email.trim() === '') {
+        throw new Error('email must be a non-empty string');
+    }
+
+    const { data, error } = await supabase
+    .from("clientes")
+    .select("id")
+    .eq("email", email)
+    .single();
+
+    if (error) {
+        console.error("Error al obtener el ID del cliente por email:", error);
+        throw new Error(`Error al obtener el ID del cliente por email: ${error.message}`);
+    }
+
+    if (data) {
+        return data.id;
+    } else {
+        console.warn("No se encontró un cliente con el email proporcionado:", email);
+        return null; // Si no se encuentra el cliente, retornamos null
+    }
 }
 
 // VENTAS
@@ -708,7 +492,7 @@ export const obtenerTotalComprasClientePorId = async (clienteId: string | number
 export const agregarVenta = async (venta: VentaFormulario) => {
     // AGREGAR DATOS INICIALES DE LA VENTA A LA BASE DE DATOS
     const ventaData = {
-        fecha: new Date().toISOString(),
+        fecha: DateTime.now().setZone("America/Santiago").toISO(),
         cliente: venta.cliente,
         total: venta.total,
         metodo_pago: venta.metodoPago,
@@ -730,7 +514,7 @@ export const agregarVenta = async (venta: VentaFormulario) => {
     // AGREGAR PRODUCTOS A LA VENTA
     for (const producto of venta.productos) {
         const productoData = {
-            venta_id: ventaId, // Usar el ID obtenido de la respuesta
+            venta_id: ventaId,
             producto_id: producto.id,
             cantidad: producto.cantidad,
             precio_unitario: producto.precioUnitario,
@@ -748,7 +532,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
 
     // ACTUALIZAR STOCK DE LOS PRODUCTOS VENDIDOS
     for (const producto of venta.productos) {
-        // Primero obtener el producto actual
         const { data: currentProduct, error: fetchError } = await supabase
             .from("productos")
             .select("stock")
@@ -760,7 +543,6 @@ export const agregarVenta = async (venta: VentaFormulario) => {
             throw new Error(`Error al obtener stock del producto: ${fetchError.message}`);
         }
         
-        // Luego actualizar con el nuevo stock
         const newStock = (currentProduct?.stock || 0) - producto.cantidad;
         const { error: stockError } = await supabase
             .from("productos")
@@ -774,10 +556,9 @@ export const agregarVenta = async (venta: VentaFormulario) => {
     }
 
     // ACTUALIZAR FECHA DE ULTIMA COMPRA DEL CLIENTE
-
     const { error: updateClienteError } = await supabase
     .from("clientes")
-    .update({ ultimacompra: new Date().toISOString() })
+    .update({ ultimacompra: DateTime.now().setZone("America/Santiago").toISO() })
     .eq("id", venta.cliente);
 
     if (updateClienteError) {
@@ -810,7 +591,6 @@ export const obtenerVentas = async (): Promise<Venta[]> => {
             throw new Error(`Error al obtener productos de ventas: ${productosError.message}`);
         }
 
-        // Mapear las ventas y sus productos
         for (const venta of ventas) {
             const productos = productosVentas.filter(p => p.venta_id === venta.id).map(p => ({
                 id: p.producto_id,
@@ -822,7 +602,7 @@ export const obtenerVentas = async (): Promise<Venta[]> => {
                 id: venta.id,
                 fecha: venta.fecha,
                 cliente: venta.cliente,
-                productos: productos, // Los productos se obtienen aquí
+                productos: productos,
                 total: venta.total,
                 metodoPago: venta.metodo_pago,
                 estado: venta.estado,
@@ -886,18 +666,269 @@ export const obtenerVentasRecientes = async (cantidad: number): Promise<Venta[]>
     }
 }
 
+export const obtenerVentasPorCliente = async (clienteId: number): Promise<Venta[]> => {
+    const ventasList: Venta[] = [];
+    console.log("Obteniendo ventas para el cliente:", clienteId);
+    try {
+        const { data: ventas, error } = await supabase
+        .from("ventas")
+        .select("*")
+        .eq("cliente", Number(clienteId));
+
+        console.log(ventas);
+
+        if (error) {
+            console.error("Error al obtener ventas por cliente:", error);
+            throw new Error(`Error al obtener ventas por cliente: ${error.message}`);
+        }
+
+        const { data: productosVentas, error: productosError } = await supabase
+        .from("ventas_productos")
+        .select("*");
+
+        if (productosError) {
+            console.error("Error al obtener productos de ventas:", productosError);
+            throw new Error(`Error al obtener productos de ventas: ${productosError.message}`);
+        }
+
+        for (const venta of ventas) {
+            // Create array of promises and resolve them all at once
+            const productosPromises = productosVentas
+                .filter(p => p.venta_id === venta.id)
+                .map(async p => {
+                    console.log("Obteniendo nombre del producto para el ID:", p.producto_id);
+                    const nombre = await obtenerNombreProductoById(p.producto_id);
+                    return {
+                        id: p.producto_id,
+                        cantidad: p.cantidad,
+                        nombre: nombre || "Producto no encontrado",
+                        precioUnitario: p.precio_unitario
+                    };
+                });
+            
+            // Await all promises
+            const productos = await Promise.all(productosPromises);
+            
+            ventasList.push({
+                id: venta.id,
+                fecha: venta.fecha,
+                cliente: venta.cliente,
+                productos: productos,
+                total: venta.total,
+                metodoPago: venta.metodo_pago,
+                estado: venta.estado,
+            });
+        }
+        return ventasList;
+    } catch (error) {
+        console.error("Error al obtener ventas por cliente:", error);
+        throw new Error(`Error al obtener ventas por cliente: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
+
+// PROMOCIONES
+
+export const agregarPromocion = async (promocion: any) => {
+    const promocionData = {
+        codigo: promocion.codigo,
+        nombre: promocion.nombre,
+        tipo: promocion.tipo,
+        valor: promocion.valor,
+        valor_maximo: promocion.valorMaximo || 0,
+        monto_minimo: promocion.montoMinimo || 0,
+        fecha_inicio: DateTime.fromISO(promocion.fechaInicio).setZone("America/Santiago").toISO(),
+        fecha_fin: DateTime.fromISO(promocion.fechaFin).setZone("America/Santiago").toISO(),
+        limite_total_usos: promocion.limiteTotalUsos || 0,
+        limite_usos_por_cliente: promocion.limiteUsosPorCliente || 1,
+        usos_actuales: 0,
+        estado: promocion.estado || "activo",
+        aplica_a: promocion.aplicaA || "todos",
+        productos_incluidos: promocion.productosIncluidos || [],
+        productos_excluidos: promocion.productosExcluidos || [],
+        categorias_incluidas: promocion.categoriasIncluidas || [],
+        categorias_excluidas: promocion.categoriasExcluidas || [],
+        tipo_cliente: promocion.tipoCliente || "todos",
+        combinable: promocion.combinable || false,
+        descripcion: promocion.descripcion || "",
+        fecha_creacion: DateTime.now().setZone("America/Santiago").toISO(),
+        creado_por: promocion.creadoPor || "Admin",
+        ingreso_generado: promocion.ingresoGenerado || 0,
+        valor_promedio_compra: promocion.valorPromedioCompra || 0,
+        tasa_conversion: promocion.tasaConversion || 0,
+        horarios_uso: promocion.horariosUso || [],
+        productos_vendidos: promocion.productosVendidos || [],
+    }
+
+    try {
+        const { data, error } = await supabase
+        .from("promociones")
+        .insert([promocionData])
+        .select();
+
+        if (error) {
+            toast.error("Error al agregar promoción: " + (error instanceof Error ? error.message : 'Unknown error'));
+            console.error("Error al agregar promoción:", error);
+            throw new Error(`Error al agregar promoción: ${error.message}`);
+        }
+
+        toast.success("Promoción agregada exitosamente");
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        toast.error("Error al agregar promoción: " + (err instanceof Error ? err.message : 'Unknown error'));
+        throw err;
+    }
+}
+
+export const obtenerPromociones = async (): Promise<any[]> => {
+    const promocionesList: any[] = [];
+
+    try {
+        const { data: promociones, error } = await supabase
+        .from("promociones")
+        .select("*");
+
+        if (error) {
+            console.error("Error al obtener promociones:", error);
+            throw new Error(`Error al obtener promociones: ${error.message}`);
+        }
+
+        for (const promocion of promociones) {
+            promocionesList.push({
+                id: promocion.id,
+                codigo: promocion.codigo,
+                nombre: promocion.nombre,
+                tipo: promocion.tipo,
+                valor: promocion.valor,
+                valorMaximo: promocion.valor_maximo || 0,
+                montoMinimo: promocion.monto_minimo || 0,
+                fechaInicio: promocion.fecha_inicio || DateTime.now().setZone("America/Santiago").toISO(),
+                fechaFin: promocion.fecha_fin || DateTime.now().setZone("America/Santiago").toISO(),
+                limiteTotalUsos: promocion.limite_total_usos || 0,
+                limiteUsosPorCliente: promocion.limite_usos_por_cliente || 1,
+                usosActuales: promocion.usos_actuales || 0,
+                estado: promocion.estado || "activo",
+                aplicaA: promocion.aplica_a || "todos",
+                productosIncluidos: promocion.productos_incluidos || [],
+                productosExcluidos: promocion.productos_excluidos || [],
+                categoriasIncluidas: promocion.categorias_incluidas || [],
+                categoriasExcluidas: promocion.categorias_excluidas || [],
+                tipoCliente: promocion.tipo_cliente || "todos",
+                combinable: promocion.combinable || false,
+                descripcion: promocion.descripcion || "",
+                fechaCreacion: promocion.fecha_creacion || DateTime.now().setZone("America/Santiago").toISO(),
+                creadoPor: promocion.creado_por || "Admin",
+                ingresoGenerado: promocion.ingreso_generado || 0,
+                valorPromedioCompra: promocion.valor_promedio_compra || 0,
+                tasaConversion: promocion.tasa_conversion || 0,
+                horariosUso: promocion.horarios_uso || [],
+                productosVendidos: promocion.productos_vendidos || [],
+            });
+        }
+
+        return promocionesList;
+    } catch (error) {
+        console.error("Error al obtener promociones:", error);
+        throw new Error(`Error al obtener promociones: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+}
+
 // USUARIOS
 
 export const obtenerUsuarios = async (): Promise<Usuario[]> => {
     const usuariosList: Usuario[] = [];
-    return usuariosList;
+
+    try {
+        const { data: usuarios, error } = await supabase
+        .from("usuarios")
+        .select("*");
+
+        if (error) {
+            console.error("Error al obtener usuarios:", error);
+            throw new Error(`Error al obtener usuarios: ${error.message}`);
+        }
+
+        for (const usuario of usuarios) {
+            usuariosList.push({
+                id: usuario.id,
+                uid: usuario.uid,
+                nombre: usuario.nombre,
+                email: usuario.email,
+                rol: usuario.rol || "usuario",
+                estado: usuario.estado || "activo",
+                fechaCreacion: usuario.fecha_creacion || DateTime.now().setZone("America/Santiago").toISO(),
+                ultimaModificacion: usuario.ultima_modificacion || DateTime.now().setZone("America/Santiago").toISO(),
+                ultimoAcceso: usuario.ultimo_acceso || DateTime.now().setZone("America/Santiago").toISO(),
+            });
+        }
+
+        return usuariosList;
+    } catch (error) {
+        console.error("Error al obtener usuarios:", error);
+        throw new Error(`Error al obtener usuarios: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 };
 
-export const obtenerUsuarioPorId = async (id: string) => {}
+export const obtenerUsuarioPorId = async () => {}
+export const agregarUsuario = async (NuevoUsuario: { uid: string; nombre: string; email: string; rol: "admin" | "usuario" | "cliente"; estado: "activo" | "inactivo"; fecha_creacion: string; ultima_modificacion: string; ultimo_acceso: string; }) => {
+    try {
+        const { data, error } = await supabase
+        .from("usuarios")
+        .insert([NuevoUsuario])
+        .select();
 
-export const agregarUsuario = async (usuario: UsuarioFirebase) => {};
+        if (error) {
+            console.error("Error al agregar usuario:", error);
+            throw new Error(`Error al agregar usuario: ${error.message}`);
+        }
 
-export const eliminarUsuario = async (id: string) => {};
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+};
+
+export const actualizarUsuario = async (userId: string, userData: { nombre: string; email: string; rol: "admin" | "usuario"; estado: "activo" | "inactivo"; }) => {
+    try {
+        const { data, error } = await supabase
+        .from("usuarios")
+        .update(userData)
+        .eq("id", Number(userId))
+        .select();
+
+        if (error) {
+            console.error("Error al actualizar usuario:", error);
+            throw new Error(`Error al actualizar usuario: ${error.message}`);
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+}
+
+export const eliminarUsuario = async (userId: string) => {
+    try {
+        const { data, error } = await supabase
+        .from("usuarios")
+        .delete()
+        .eq("id", Number(userId))
+        .select();
+
+        if (error) {
+            console.error("Error al eliminar usuario:", error);
+            throw new Error(`Error al eliminar usuario: ${error.message}`);
+        }
+
+        return data;
+    } catch (err) {
+        console.error("Error en la operación:", err);
+        throw err;
+    }
+};
 
 function base64ToFile(base64: string, filename: string, mimeType: string): File {
   const byteString = atob(base64.split(',')[1]);

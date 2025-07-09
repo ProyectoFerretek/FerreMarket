@@ -1,28 +1,17 @@
-import React, { useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate } from 'react-router-dom';
-import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
-const ProtectedRoute = ({ component, ...args }) => {
-  const Component = withAuthenticationRequired(component, args);
-  return <Component />;
+const ProtectedRoute = ({ children }) => {
+    const { session } = UserAuth();
+
+    if (session) {
+        return <>{children}</>;
+    } else {
+        return <Navigate to="/admin/login" replace />;
+    }
 };
 
-const Auth0ProviderWithRedirectCallback = ({ children, ...props }) => {
-  const navigate = useNavigate();
-  const onRedirectCallback = (appState) => {
-    navigate((appState && appState.returnTo) || window.location.pathname);
-  };
-  return (
-    <Auth0Provider onRedirectCallback={onRedirectCallback} {...props}>
-      {children}
-    </Auth0Provider>
-  );
-};
-
-// Layouts
 import Layout from './components/layout/Layout';
-
-// Pages
+import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import NotFound from './pages/NotFound';
@@ -32,32 +21,30 @@ import Ventas from './pages/Ventas';
 import Promociones from './pages/Promociones';
 import Reportes from './pages/Reportes';
 import GestionUsuarios from './pages/Usuarios';
+import { AuthContextProvider, UserAuth } from './context/AuthContext';
 
 function App() {
+  const {} = UserAuth();
+
   return (
-    <BrowserRouter>
-      <Auth0ProviderWithRedirectCallback
-          domain={import.meta.env.VITE_AUTH0_DOMAIN_NAME}
-          clientId={import.meta.env.VITE_AUTH0_CLIENT_ID}
-          authorizationParams={{
-            redirect_uri: window.location.origin,
-          }}
-        >
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={<ProtectedRoute component={Layout} />}>
-          <Route index element={<ProtectedRoute component={Dashboard} />} />
-          <Route path="productos" element={<ProtectedRoute component={Productos} />} />
-          <Route path="clientes" element={<ProtectedRoute component={Clientes} />} />
-          <Route path="ventas" element={<ProtectedRoute component={Ventas} />} />
-          <Route path="promociones" element={<ProtectedRoute component={Promociones} />} />
-          <Route path="reportes" element={<ProtectedRoute component={Reportes} />} />
-          <Route path="usuarios" element={<ProtectedRoute component={GestionUsuarios} />} />
-          <Route path="*" element={<ProtectedRoute component={NotFound} />} />
-        </Route>
-      </Routes>
-      </Auth0ProviderWithRedirectCallback>
-    </BrowserRouter>
+      <BrowserRouter>
+          <AuthContextProvider>
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/admin/login" element={<Login />} />
+              <Route path="/admin" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="productos" element={<Productos />} />
+                  <Route path="clientes" element={<Clientes />} />
+                  <Route path="ventas" element={<Ventas />} />
+                  <Route path="promociones" element={<Promociones />} />
+                  <Route path="reportes" element={<Reportes />} />
+                  <Route path="usuarios" element={<GestionUsuarios />} />
+                  <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </AuthContextProvider>
+      </BrowserRouter>
   );
 }
 

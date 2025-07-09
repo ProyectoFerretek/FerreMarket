@@ -1,22 +1,66 @@
-// import { usuarioActual } from '../data/mockData';
+import supabase from "../lib/supabase/Supabase";
 
 const usuarioActual = {
-  rol : 'admin', // Simulación de rol del usuario actual
-  estado: 'activo' // Simulación de estado del usuario actual
+	id: "",
+	rol: "",
+	estado: "",
+	nombre: "",
+}
+
+
+export const obtenerUsuarioIdByUUID = async (uuid: string): Promise<number | null> => {
+	const { data, error } = await supabase
+		.from('usuarios')
+		.select('id')
+		.eq('uid', uuid)
+		.single();
+
+	console.log('UUID del usuario:', uuid);
+
+	if (error) {
+		console.error('Error al obtener el ID del usuario por UUID:', error);
+		return null;
+	}
+
+	return data ? data.id : null;
+}
+
+export const cargarPermisosTrabajador = async () => {
+	const session = await supabase.auth.getSession();
+	if (session.data.session) {
+		const { user } = session.data.session;
+		const { data, error } = await supabase
+			.from('usuarios')
+			.select('*')
+			.eq('uid', user.id)
+			.single();
+
+		if (error) {
+			console.error('Error al cargar los permisos del usuario:', error);
+			return;
+		}
+		if (data) {
+			usuarioActual.rol = capitalizeWords(data.rol) || 'Usuario';
+			usuarioActual.estado = capitalizeWords(data.estado) || 'Activo';
+			usuarioActual.nombre = capitalizeWords(data.nombre) || 'Usuario';
+		}
+	} else {
+		console.warn('No hay sesión activa para cargar permisos del usuario.');
+	}
 }
 
 /**
  * Verifica si el usuario actual tiene permisos de administrador
  */
 export const esAdministrador = (): boolean => {
-  return usuarioActual.rol === 'admin';
+  return usuarioActual.rol === 'Admin';
 };
 
 /**
  * Verifica si el usuario actual puede acceder a la gestión de usuarios
  */
 export const puedeGestionarUsuarios = (): boolean => {
-  return esAdministrador() && usuarioActual.estado === 'activo';
+  return esAdministrador() && usuarioActual.estado === 'Activo';
 };
 
 /**
@@ -40,8 +84,16 @@ export const puedeRealizarAccion = (accion: 'crear' | 'editar' | 'eliminar' | 'v
     case 'recuperar':
       return true
     case 'eliminar':
-      return usuarioActual.estado === 'activo';
+		if (usuarioActual.estado === 'Activo' && usuarioActual.rol === 'Admin') {
+			return true;
+		}
     default:
       return false;
   }
+};
+
+const capitalizeWords = (str: string): string => {
+  return str.split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
 };

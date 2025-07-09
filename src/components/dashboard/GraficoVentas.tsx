@@ -10,13 +10,17 @@ interface GraficoVentasProps {
 
 const GraficoVentas: React.FC<GraficoVentasProps> = ({ datos, isLoading = false }) => {
   // Formatear las fechas para mostrar solo los últimos 7 días
-  const datosFormateados = datos.slice(-7).map(item => ({
-    ...item,
-    fecha: new Date(item.fecha).toLocaleDateString('es-ES', { 
-      day: 'numeric',
-      month: 'short'
-    })
-  }));
+  const datosFormateados = datos.slice(-7).map(item => {
+    const date = new Date(item.fecha);
+    date.setMinutes(date.getMinutes() + date.getTimezoneOffset());
+    return {
+      ...item,
+      fecha: date.toLocaleDateString('es-CL', { 
+        day: 'numeric',
+        month: 'short'
+      })
+    };
+  });
 
   const totalVentas7Dias = datosFormateados.reduce((sum, item) => sum + item.ventas, 0);
   const promedioDiario = datosFormateados.length > 0 
