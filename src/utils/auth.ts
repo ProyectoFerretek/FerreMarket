@@ -1,17 +1,36 @@
 import supabase from "../lib/supabase/Supabase";
 
 const usuarioActual = {
+	id: "",
 	rol: "",
 	estado: "",
 	nombre: "",
 }
 
-export const cargarPermisosUsuario = async () => {
+
+export const obtenerUsuarioIdByUUID = async (uuid: string) => {
+	const { data, error } = await supabase
+		.from('usuarios')
+		.select('id')
+		.eq('uid', uuid)
+		.single();
+
+	if (error) {
+		console.error('Error al obtener el ID del usuario por UUID:', error);
+		return null;
+	}
+
+	if (data) {
+		usuarioActual.id = data.id;
+	}
+}
+
+export const cargarPermisosTrabajador = async () => {
 	const session = await supabase.auth.getSession();
 	if (session.data.session) {
 		const { user } = session.data.session;
 		const { data, error } = await supabase
-			.from('usuarios')
+			.from('trabajadores')
 			.select('*')
 			.eq('uid', user.id)
 			.single();
