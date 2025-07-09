@@ -6,78 +6,38 @@ import {
   CheckCircle, XCircle, AlertCircle, Home,
   Package, CreditCard, Users, Gift, Loader
 } from 'lucide-react';
-import { categorias, obtenerProductos } from '../data/mockData';
+import { agregarCliente, agregarUsuario, categorias, obtenerClienteIdByMail, obtenerProductos, obtenerPromociones, obtenerTotalComprasClientePorId, obtenerVentasPorCliente, obtenerVentasRecientes } from '../data/mockData';
 import { formatPrecio, formatFecha } from '../utils/formatters';
-import { Producto } from '../types';
+import { Producto, Promocion, Cliente, Venta } from '../types';
 import toast from 'react-hot-toast';
 import { UserAuth } from '../context/AuthContext';
 import { obtenerUsuarioIdByUUID } from '../utils/auth';
 
-// Mock data para promociones de la landing
-const promocionesLanding = [
-//   {
-//     id: 'PROMO001',
-//     titulo: 'Descuento 20% en Herramientas',
-//     descripcion: 'Aprovecha nuestro descuento especial en toda la línea de herramientas eléctricas y manuales.',
-//     descuento: 20,
-//     tipo: 'porcentaje',
-//     fechaInicio: '2024-01-01',
-//     fechaFin: '2024-12-31',
-//     imagen: 'https://images.pexels.com/photos/1249611/pexels-photo-1249611.jpeg',
-//     terminos: 'Válido solo en tienda física. No acumulable con otras promociones. Stock limitado.',
-//     categoria: 'herramientas'
-//   },
-//   {
-//     id: 'PROMO002',
-//     titulo: 'Envío Gratis en Compras +$100.000',
-//     descripcion: 'Compra desde $100.000 y recibe envío gratuito a domicilio en Santiago.',
-//     descuento: 0,
-//     tipo: 'envio_gratis',
-//     fechaInicio: '2024-01-01',
-//     fechaFin: '2024-12-31',
-//     imagen: 'https://images.pexels.com/photos/906494/pexels-photo-906494.jpeg',
-//     terminos: 'Válido para Santiago y comunas aledañas. Tiempo de entrega 24-48 horas.',
-//     categoria: 'general'
-//   },
-//   {
-//     id: 'PROMO003',
-//     titulo: 'Combo Pintura + Rodillos',
-//     descripcion: 'Lleva pintura y rodillos con 15% de descuento en el combo completo.',
-//     descuento: 15,
-//     tipo: 'combo',
-//     fechaInicio: '2024-01-15',
-//     fechaFin: '2024-02-28',
-//     imagen: 'https://images.pexels.com/photos/5582597/pexels-photo-5582597.jpeg',
-//     terminos: 'Promoción válida solo en tienda física. Mínimo 2 productos del combo.',
-//     categoria: 'pinturas'
-//   }
-];
-
 // Mock data para historial de compras (usuario logueado)
 const historialCompras = [
-  {
-    id: 'V001',
-    fecha: '2024-01-15T14:30:00',
-    productos: [
-      { nombre: 'Taladro Inalámbrico 18V', cantidad: 1, precio: 59990 },
-      { nombre: 'Set de Destornilladores', cantidad: 1, precio: 12990 }
-    ],
-    total: 72980,
-    estado: 'completada',
-    garantia: '2024-01-15T14:30:00',
-    puntos: 73
-  },
-  {
-    id: 'V002',
-    fecha: '2024-01-08T11:15:00',
-    productos: [
-      { nombre: 'Pintura Látex Blanco 1GL', cantidad: 2, precio: 18990 }
-    ],
-    total: 37980,
-    estado: 'completada',
-    garantia: null,
-    puntos: 38
-  }
+  // {
+  //   id: 'V001',
+  //   fecha: '2024-01-15T14:30:00',
+  //   productos: [
+  //     { nombre: 'Taladro Inalámbrico 18V', cantidad: 1, precio: 59990 },
+  //     { nombre: 'Set de Destornilladores', cantidad: 1, precio: 12990 }
+  //   ],
+  //   total: 72980,
+  //   estado: 'completada',
+  //   garantia: '2024-01-15T14:30:00',
+  //   puntos: 73
+  // },
+  // {
+  //   id: 'V002',
+  //   fecha: '2024-01-08T11:15:00',
+  //   productos: [
+  //     { nombre: 'Pintura Látex Blanco 1GL', cantidad: 2, precio: 18990 }
+  //   ],
+  //   total: 37980,
+  //   estado: 'completada',
+  //   garantia: null,
+  //   puntos: 38
+  // }
 ];
 
 const Landing: React.FC = () => {
@@ -88,8 +48,12 @@ const Landing: React.FC = () => {
   const [modalLogin, setModalLogin] = useState(false);
   const [modalProducto, setModalProducto] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null);
+  
+  const [userId, setUserId] = useState(0);
+  const [totalGastado, setTotalGastado] = useState(0);
 
-    const { signInUser, signOut } = UserAuth();
+
+  const { signOut } = UserAuth();
   
   // Estados para productos
   const [busquedaProductos, setBusquedaProductos] = useState('');
@@ -107,6 +71,25 @@ const Landing: React.FC = () => {
       cargarProductos();
   }, []);
 
+  const [promociones, setPromociones] = useState<Promocion[]>([]);
+
+  const cargarPromociones = async () => {
+      const promocionesData = await obtenerPromociones();
+      setPromociones(promocionesData);
+  }
+  
+  useEffect(() => {
+      cargarPromociones();
+  }, []);
+
+  const [compras, setCompras] = useState<Venta[]>([]);
+
+  const cargarVentas = async () => {
+      const comprasData = await obtenerVentasPorCliente(userId);
+      console.log(comprasData);
+      setCompras(comprasData);
+  }
+  
   // Estados responsive
   const [isMobile, setIsMobile] = useState(false);
 
@@ -696,17 +679,17 @@ const Landing: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-          {promocionesLanding.map(promocion => (
+          {promociones.map(promocion => (
             <div key={promocion.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg transition-shadow">
               <div className="relative">
                 <img
-                  src={promocion.imagen}
-                  alt={promocion.titulo}
+                  src={promocion.imagen || "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQMT1bJByNzjUz4dClxW5GXS4fpJJchVIoA-CzqH0D5QBF_aOeyhxer42zw8HuCaojQmN4&usqp=CAU"}
+                  alt={promocion.nombre}
                   className="w-full h-48 object-cover"
                 />
                 <div className="absolute top-4 left-4">
                   <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                    {promocion.tipo === 'porcentaje' ? `${promocion.descuento}% OFF` : 
+                    {promocion.tipo === 'porcentaje' ? `${promocion.valor}% OFF` : 
                      promocion.tipo === 'envio_gratis' ? 'ENVÍO GRATIS' : 'COMBO'}
                   </span>
                 </div>
@@ -714,7 +697,7 @@ const Landing: React.FC = () => {
 
               <div className="p-6">
                 <h3 className="text-xl font-bold text-gray-900 mb-2">
-                  {promocion.titulo}
+                  {promocion.nombre} ({promocion.codigo})
                 </h3>
                 
                 <p className="text-gray-600 mb-4">
@@ -740,7 +723,7 @@ const Landing: React.FC = () => {
                   </p>
                 </div>
 
-                <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <button className="w-full bg-orange-500 text-white py-2 px-4 rounded-lg hover:bg-amber-700 transition-colors font-medium">
                   Ver Detalles
                 </button>
               </div>
@@ -748,7 +731,7 @@ const Landing: React.FC = () => {
           ))}
         </div>
 
-        {promocionesLanding.length === 0 && (
+        {promociones.length === 0 && (
           <div className="text-center py-12">
             <Gift size={48} className="mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -778,7 +761,7 @@ const Landing: React.FC = () => {
             </p>
             <button
               onClick={() => setModalLogin(true)}
-              className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              className="bg-orange-600 text-white px-8 py-3 rounded-lg hover:bg-amber-700 transition-colors font-medium"
             >
               Iniciar Sesión
             </button>
@@ -787,8 +770,9 @@ const Landing: React.FC = () => {
       );
     }
 
-    const totalPuntos = historialCompras.reduce((sum, compra) => sum + compra.puntos, 0);
-    const totalGastado = historialCompras.reduce((sum, compra) => sum + compra.total, 0);
+    // const totalPuntos = historialCompras.reduce((sum, compra) => sum + compra.puntos, 0);
+    const totalPuntos = 0;
+    // const totalGastado = obtenerTotalComprasClientePorId(userId);
 
     return (
       <section className="py-12 lg:py-16">
@@ -812,7 +796,7 @@ const Landing: React.FC = () => {
             
             <div className="bg-green-50 rounded-lg p-6 text-center">
               <ShoppingBag size={32} className="mx-auto text-green-600 mb-2" />
-              <div className="text-2xl font-bold text-green-900">{historialCompras.length}</div>
+              <div className="text-2xl font-bold text-green-900">{compras.length}</div>
               <div className="text-green-700">Compras Realizadas</div>
             </div>
             
@@ -832,7 +816,7 @@ const Landing: React.FC = () => {
             </div>
             
             <div className="divide-y divide-gray-200">
-              {historialCompras.map(compra => (
+              {compras.map(compra => (
                 <div key={compra.id} className="p-6">
                   <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4">
                     <div>
@@ -858,7 +842,7 @@ const Landing: React.FC = () => {
                         {formatPrecio(compra.total)}
                       </div>
                       <div className="text-sm text-blue-600">
-                        +{compra.puntos} puntos
+                        +5,000 puntos
                       </div>
                     </div>
                   </div>
@@ -871,7 +855,7 @@ const Landing: React.FC = () => {
                           {producto.cantidad}x {producto.nombre}
                         </span>
                         <span className="text-gray-900 font-medium">
-                          {formatPrecio(producto.precio * producto.cantidad)}
+                          {formatPrecio(producto.precioUnitario * producto.cantidad)}
                         </span>
                       </div>
                     ))}
@@ -1023,7 +1007,7 @@ const Landing: React.FC = () => {
               
               <button
                 type="submit"
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="w-full bg-orange-500 text-white py-3 px-4 rounded-lg hover:bg-amber-700 transition-colors font-medium"
               >
                 Enviar Mensaje
               </button>
@@ -1033,6 +1017,53 @@ const Landing: React.FC = () => {
       </div>
     </section>
   );
+
+  // Función para formatear RUT
+  const formatearRUT = (rut: string) => {
+    // Eliminar todo lo que no sean números o K
+    const cleanRut = rut.replace(/[^0-9kK]/g, '');
+    
+    // Si está vacío, retornar vacío
+    if (!cleanRut) return '';
+    
+    // Separar cuerpo y dígito verificador
+    const cuerpo = cleanRut.slice(0, -1);
+    const dv = cleanRut.slice(-1).toUpperCase();
+    
+    // Formatear el cuerpo con puntos
+    let cuerpoFormateado = '';
+    for (let i = cuerpo.length - 1, j = 0; i >= 0; i--, j++) {
+      if (j > 0 && j % 3 === 0) {
+        cuerpoFormateado = '.' + cuerpoFormateado;
+      }
+      cuerpoFormateado = cuerpo[i] + cuerpoFormateado;
+    }
+    
+    // Retornar RUT formateado
+    return cuerpoFormateado + (dv ? '-' + dv : '');
+  };
+
+  // Función para validar RUT
+  const validarRUT = (rut: string) => {
+    const cleanRut = rut.replace(/[^0-9kK]/g, '');
+    if (cleanRut.length < 2) return false;
+    
+    const cuerpo = cleanRut.slice(0, -1);
+    const dv = cleanRut.slice(-1).toUpperCase();
+    
+    let suma = 0;
+    let multiplo = 2;
+    
+    for (let i = cuerpo.length - 1; i >= 0; i--) {
+      suma += parseInt(cuerpo[i]) * multiplo;
+      multiplo = multiplo === 7 ? 2 : multiplo + 1;
+    }
+    
+    const resto = suma % 11;
+    const dvCalculado = resto < 2 ? resto.toString() : resto === 2 ? 'K' : (11 - resto).toString();
+    
+    return dv === dvCalculado;
+  };
 
   // Modal de Detalle del Producto
   const ModalDetalleProducto = () => {
@@ -1179,10 +1210,13 @@ const Landing: React.FC = () => {
       apellido: '', 
       email: '', 
       telefono: '', 
+      rut: '',
+      direccion: '',
       password: '', 
       confirmPassword: '' 
     });
     const [isLoading, setIsLoading] = useState(false);
+    const { signInUser, signUpNewUser } = UserAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -1193,19 +1227,27 @@ const Landing: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 1500));
         
         signInUser(formLogin.email, formLogin.password)
-        .then(async (session) => {
+        .then(async (session: { data: { session: { user: any; }; }; }) => {
             if (session.data.session) {
                 const { user } = session.data.session;
-                await obtenerUsuarioIdByUUID(user.id)
+                const id = await obtenerClienteIdByMail(user.email);
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                if (id !== null) {
+                  setUserId(id);
+                  setUsuarioLogueado(true);
+                  setModalLogin(false);
+                  setSeccionActiva('perfil');
+                  toast.success('¡Inicio de sesión exitoso!');
+
+                  const ventasData = await obtenerVentasPorCliente(id);
+                  console.log('Ventas del usuario:', ventasData);
+                  setCompras(ventasData);
+
+                  const totalGastadoUsuario = await obtenerTotalComprasClientePorId(id);
+                  setTotalGastado(totalGastadoUsuario);
+                }
             }
-
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            setUsuarioLogueado(true);
-            setModalLogin(false);
-            setSeccionActiva('perfil');
-            toast.success('¡Inicio de sesión exitoso!');
-            console.log('Sesión iniciada:', session);
         })
       } catch (error) {
         console.error('Error al iniciar sesión:', error);
@@ -1220,16 +1262,62 @@ const Landing: React.FC = () => {
       
       // Validar que las contraseñas coincidan
       if (formRegistro.password !== formRegistro.confirmPassword) {
-        // alert('Las contraseñas no coinciden');
         toast.error('Las contraseñas no coinciden');
         return;
       }
 
-      // Simulación de registro exitoso
-      setUsuarioLogueado(true);
-      setModalLogin(false);
-      setSeccionActiva('perfil');
-      alert('¡Registro exitoso! Bienvenido a FerreMarket');
+      // Validar RUT
+      if (!validarRUT(formRegistro.rut)) {
+        toast.error('El RUT ingresado no es válido');
+        return;
+      }
+
+      try {
+        const NuevoUsuario = {
+              uid: "",
+              nombre: formRegistro.nombre + " " + formRegistro.apellido,
+              email: formRegistro.email,
+              rol: "cliente" as "admin" | "usuario" | "cliente",
+              estado: "activo" as "activo" | "inactivo",
+              fecha_creacion: new Date().toISOString(),
+              ultima_modificacion: new Date().toISOString(),
+              ultimo_acceso: new Date().toISOString(),
+          }
+
+        signUpNewUser(formRegistro.email, formRegistro.password).then((usuario: { data: { user: { id: string; }; }; }) => {
+          NuevoUsuario.uid = usuario.data.user.id;
+          agregarUsuario(NuevoUsuario)
+          
+          // Crear cliente con los nuevos datos
+          const nuevoCliente: Cliente = {
+            tipoCliente: "individual",
+            nombre: formRegistro.nombre,
+            apellidos: formRegistro.apellido,
+            email: formRegistro.email,
+            telefono: formRegistro.telefono,
+            run: formRegistro.rut,
+            direccion: formRegistro.direccion,
+            fechaCreacion: new Date().toISOString(),
+            estado: "activo" as "activo" | "inactivo",
+            compras: 0,
+            totalCompras: 0,
+            ultimaCompra: "",
+            notas: ""
+          };
+          
+          agregarCliente("individual", nuevoCliente);
+          
+          toast.success('¡Registro exitoso! Bienvenido a FerreMarket');
+          
+          // Simulación de registro exitoso
+          setUsuarioLogueado(true);
+          setModalLogin(false);
+          setSeccionActiva('perfil');
+        })
+      } catch (error) {
+        console.error('Error al registrar usuario:', error);
+        toast.error('Error al registrar usuario. Intenta nuevamente.');
+      }
     };
 
     if (!modalLogin) return null;
@@ -1393,6 +1481,38 @@ const Landing: React.FC = () => {
                   onChange={(e) => setFormRegistro(prev => ({ ...prev, telefono: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="+56 9 1234 5678"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  RUT
+                </label>
+                <input
+                  type="text"
+                  value={formRegistro.rut}
+                  onChange={(e) => {
+                    const rutFormateado = formatearRUT(e.target.value);
+                    setFormRegistro(prev => ({ ...prev, rut: rutFormateado }));
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="12.345.678-9"
+                  maxLength={12}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Dirección
+                </label>
+                <input
+                  type="text"
+                  value={formRegistro.direccion}
+                  onChange={(e) => setFormRegistro(prev => ({ ...prev, direccion: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Av. Providencia 1234, Santiago"
                   required
                 />
               </div>
