@@ -94,7 +94,7 @@ export interface Usuario {
   uid: string;
   nombre: string;
   email: string;
-  rol: 'admin' | 'usuario';
+  rol: 'admin' | 'usuario' | 'cliente';
   estado: 'activo' | 'inactivo';
   fechaCreacion: string;
   ultimaModificacion: string;
@@ -108,6 +108,37 @@ export interface UsuarioFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  rol: 'admin' | 'usuario';
+  rol: 'admin' | 'usuario' | 'cliente';
   estado: 'activo' | 'inactivo';
+}
+
+export interface Promocion {
+  id: string;
+  codigo: string;
+  nombre: string;
+  tipo: string;
+  valor: number;
+  valorMaximo?: number;
+  montoMinimo: number;
+  fechaInicio: string; // ISO 8601
+  fechaFin: string; // ISO 8601
+  limiteTotalUsos?: number;
+  limiteUsosPorCliente?: number;
+  usosActuales: number;
+  estado: string;
+  aplicaA: string;
+  productosIncluidos: string[];
+  productosExcluidos: string[];
+  categoriasIncluidas: string[];
+  categoriasExcluidas: string[];
+  tipoCliente: string;
+  combinable: boolean;
+  descripcion?: string;
+  fechaCreacion: string; // ISO 8601
+  creadoPor: string;
+  ingresoGenerado: number;
+  valorPromedioCompra: number;
+  tasaConversion: number;
+  horariosUso: string[];
+  productosVendidos: string[];
 }
