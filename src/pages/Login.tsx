@@ -84,7 +84,7 @@ const Login: React.FC = () => {
         cargarPermisosTrabajador();
         
         await new Promise(resolve => setTimeout(resolve, 800));
-        Nav('/');
+        Nav('/admin/');
       }
     } catch (error) {
       console.error('Error durante el login:', error);

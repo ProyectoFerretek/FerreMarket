@@ -166,7 +166,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
         setHistorialBusquedas(prev => [searchQuery.trim(), ...prev.slice(0, 4)]);
       }
       
-      console.log('Búsqueda:', searchQuery);
       setShowDropdown(false);
       if (isMobile && onClose) {
         onClose();
@@ -179,7 +178,6 @@ const SearchComponent: React.FC<SearchComponentProps> = ({
     if (!historialBusquedas.includes(sugerencia.texto)) {
       setHistorialBusquedas(prev => [sugerencia.texto, ...prev.slice(0, 4)]);
     }
-    console.log('Seleccionada:', sugerencia);
     setShowDropdown(false);
     if (isMobile && onClose) {
       onClose();
