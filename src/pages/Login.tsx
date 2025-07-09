@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, Mail, Lock, AlertCircle, Shield, ArrowRight, Building2 } from 'lucide-react';
 import { UserAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { cargarPermisosUsuario } from '../utils/auth';
+import { cargarPermisosTrabajador } from '../utils/auth';
 
 const Login: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -81,7 +81,7 @@ const Login: React.FC = () => {
         handleLoginError();
       } else {
         resetLoginAttempts();
-        cargarPermisosUsuario();
+        cargarPermisosTrabajador();
         
         await new Promise(resolve => setTimeout(resolve, 800));
         Nav('/');
