@@ -330,11 +330,18 @@ const UsuarioModal: React.FC<UsuarioModalProps> = ({ usuario, onClose, onSave, m
                     <div className="flex-1">
                       <h4 className="text-sm font-medium text-gray-700 mb-1">Rol del Usuario</h4>
                       <p className="text-lg font-semibold text-gray-900">
-                        {formData.rol === 'admin' ? 'Administrador' : 'Usuario'}
+                        {formData.rol === 'admin' 
+                          ? 'Administrador' 
+                          : formData.rol === 'cliente'
+                            ? 'Cliente'
+                            : 'Usuario'
+                        }
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {formData.rol === 'admin' ? 
                           'Acceso completo al sistema y gestión de usuarios' : 
+                          formData.rol === 'cliente' ?
+                          'Solo puede ver sus propios pedidos y realizar compras' :
                           'Acceso limitado a funciones básicas del sistema'
                         }
                       </p>

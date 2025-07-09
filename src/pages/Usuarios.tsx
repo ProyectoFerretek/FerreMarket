@@ -582,9 +582,11 @@ const GestionUsuarios: React.FC = () => {
                                                             : "bg-gray-100 text-gray-800"
                                                     }`}
                                                 >
-                                                    {usuario.rol === "admin"
-                                                        ? "Administrador"
-                                                        : "Usuario"}
+                                                    {usuario.rol === "admin" 
+                                                        ? "Administrador" 
+                                                        : usuario.rol === "cliente" 
+                                                            ? "Cliente" 
+                                                            : "Usuario"}
                                                 </span>
                                             </div>
                                         </td>
@@ -758,6 +760,8 @@ const GestionUsuarios: React.FC = () => {
                                             >
                                                 {usuario.rol === "admin"
                                                     ? "Admin"
+                                                    : usuario.rol === "cliente"
+                                                    ? "Cliente"
                                                     : "Usuario"}
                                             </span>
                                             <span
