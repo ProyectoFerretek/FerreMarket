@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import supabase from "../lib/supabase/Supabase"
+import toast from "react-hot-toast";
 
 const AuthContext = createContext<any>({});
 
@@ -24,7 +25,6 @@ export const AuthContextProvider = ({ children }) => {
 
     const signInUser = async (email: string, password: any) => {
         try {
-            console.log("Attempting to sign in with email: ", email.toLowerCase());
             const { data, error } = await supabase.auth.signInWithPassword({
                 email: email.toLowerCase(),
                 password: password
@@ -32,10 +32,10 @@ export const AuthContextProvider = ({ children }) => {
 
             if (error) {
                 console.error("Error signing in: ", error);
+                toast.error("Error al iniciar sesión. Por favor, verifica tus credenciales.");
                 return { success: false, error };
             }
 
-            console.log("User signed in successfully: ", data);
             return { success: true, data };
         } catch (error) {
             console.error("Unexpected error during sign in: ", error);
@@ -55,7 +55,7 @@ export const AuthContextProvider = ({ children }) => {
             console.error("Error deleting user: ", error);
             return { success: false, error };
         }
-        console.log("User deleted successfully");
+
         return { success: true };
     }
 
@@ -67,11 +67,9 @@ export const AuthContextProvider = ({ children }) => {
         })
 
         if (error) {
-            console.error("Error sending password recovery email: ", error);
             return { success: false, error };
         }
 
-        console.log("Password recovery email sent successfully");
         return { success: true };
     }
 
