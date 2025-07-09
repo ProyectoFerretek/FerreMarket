@@ -35,51 +35,51 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
   const menuItems: MenuItem[] = [
     {
       title: 'Dashboard',
-      path: '/',
+      path: '/admin/',
       icon: <LayoutDashboard size={18} />
     },
     {
       title: 'Productos',
-      path: '/productos',
+      path: '/admin/productos',
       icon: <Package size={18} />
     },
     {
       title: 'Clientes',
-      path: '/clientes',
+      path: '/admin/clientes',
       icon: <Users size={18} />
     },
     {
       title: 'Ventas',
-      path: '/ventas',
+      path: '/admin/ventas',
       icon: <ShoppingCart size={18} />
     },
     {
       title: 'Promociones',
-      path: '/promociones',
+      path: '/admin/promociones',
       icon: <Tag size={18} />
     },
     {
       title: 'Reportes',
-      path: '/reportes',
+      path: '/admin/reportes',
       icon: <BarChart2 size={18} />
     },
     {
       title: 'Gestión de Usuarios',
-      path: '/usuarios',
+      path: '/admin/usuarios',
       icon: <UserCog size={18} />,
       requiresAdmin: true
     },
   ];
 
   const bottomMenuItems: MenuItem[] = [
-    {
-      title: 'Configuración',
-      path: '/configuracion',
-      icon: <Settings size={18} />
-    },
+    // {
+    //   title: 'Configuración',
+    //   path: '/configuracion',
+    //   icon: <Settings size={18} />
+    // },
     {
       title: 'Cerrar Sesión',
-      path: '/logout',
+      path: '/admin/logout',
       icon: <LogOut size={18} />
     }
   ];
@@ -155,7 +155,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, isMobile, onLinkClick }) => {
                     onClick={(e) => {
                       e.preventDefault();
                       signOut();
-                      Nav('/login');
+                      Nav('/admin/login');
                     }}
                     className={`
                       w-full flex items-center px-3 py-2.5 text-sm rounded-lg transition-colors group

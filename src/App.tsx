@@ -1,23 +1,16 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
-import { Auth0Provider, withAuthenticationRequired } from '@auth0/auth0-react';
-import supabase from './lib/supabase/Supabase'; // Asegúrate de tener tu cliente de supabase configurado
-
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ children }) => {
-  const { session } = UserAuth(); // Asegúrate de que UserAuth esté correctamente importado desde tu contexto
+    const { session } = UserAuth();
 
-  if (session) {
-    return <>{children}</>;
-  } else {
-    return <Navigate to="/login" replace />;
-  }
+    if (session) {
+        return <>{children}</>;
+    } else {
+        return <Navigate to="/admin/login" replace />;
+    }
 };
 
-// Layouts
 import Layout from './components/layout/Layout';
-
-// Pages
 import Landing from './pages/Landing';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -31,14 +24,14 @@ import GestionUsuarios from './pages/Usuarios';
 import { AuthContextProvider, UserAuth } from './context/AuthContext';
 
 function App() {
-  const {} = UserAuth(); // Asegúrate de que UserAuth esté correctamente importado desde tu contexto
+  const {} = UserAuth();
 
   return (
       <BrowserRouter>
           <AuthContextProvider>
             <Routes>
               <Route path="/" element={<Landing />} />
-              <Route path="/login" element={<Login />} />
+              <Route path="/admin/login" element={<Login />} />
               <Route path="/admin" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
                   <Route index element={<Dashboard />} />
                   <Route path="productos" element={<Productos />} />
